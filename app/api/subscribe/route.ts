@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export async function POST(request) {
+export async function POST(request: Request) {
   const { email } = await request.json();
   if (!email) return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
   const { error } = await supabase.from('subscribers').insert([{ email }]);
