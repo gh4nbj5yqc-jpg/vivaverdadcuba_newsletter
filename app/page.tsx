@@ -28,7 +28,7 @@ export default function Home() {
     <main className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Mi Newsletter
+          Viva Verdad Cuba
         </h1>
         <p className="text-gray-500 mb-8">
           Recibe un resumen semanal de las noticias más importantes, directo en tu correo.
