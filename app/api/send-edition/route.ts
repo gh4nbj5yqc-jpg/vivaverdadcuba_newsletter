@@ -20,14 +20,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No hay suscriptores' }, { status: 400 })
   }
 
-  const emails = ['alejandrosanchezavila2712@gmail.com']
+  const emails = suscriptores.map(s => s.email)
 
   await resend.emails.send({
-    from: 'onboarding@resend.dev',
+    from: 'noticias@vivaverdadcuba.com',
     to: emails,
     subject: titulo,
     text: contenido,
-  })
 
   return NextResponse.json({ ok: true })
 }
