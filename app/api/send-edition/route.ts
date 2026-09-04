@@ -27,6 +27,6 @@ export async function POST(request: Request) {
     to: emails,
     subject: titulo,
     text: contenido,
-
+  })
   return NextResponse.json({ ok: true })
 }

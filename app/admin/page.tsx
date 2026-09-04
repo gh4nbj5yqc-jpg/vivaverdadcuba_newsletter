@@ -3,10 +3,29 @@
 import { useState } from 'react'
 
 export default function AdminPage() {
+  const [autenticado, setAutenticado] = useState(false)
+  const [password, setPassword] = useState('')
+  const [errorLogin, setErrorLogin] = useState('')
+
   const [titulo, setTitulo] = useState('')
   const [contenido, setContenido] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [cargando, setCargando] = useState(false)
+
+  async function verificarPassword() {
+    setErrorLogin('')
+    const res = await fetch('/api/check-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    })
+    const data = await res.json()
+    if (data.ok) {
+      setAutenticado(true)
+    } else {
+      setErrorLogin('Contraseña incorrecta')
+    }
+  }
 
   async function enviar() {
     if (!titulo || !contenido) {
@@ -29,6 +48,29 @@ export default function AdminPage() {
       setMensaje('Error: ' + (data.error || 'algo salio mal'))
     }
     setCargando(false)
+  }
+
+  if (!autenticado) {
+    return (
+      <div className='min-h-screen bg-white p-8 max-w-sm mx-auto flex flex-col justify-center'>
+        <h1 className='text-2xl font-bold text-gray-900 mb-6'>Acceso al Panel de Admin</h1>
+        <input
+          type='password'
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') verificarPassword() }}
+          className='w-full border border-gray-300 rounded p-3 text-gray-900 mb-4'
+          placeholder='Contraseña'
+        />
+        <button
+          onClick={verificarPassword}
+          className='bg-black text-white px-6 py-3 rounded font-semibold hover:bg-gray-800'
+        >
+          Entrar
+        </button>
+        {errorLogin && <p className='mt-4 text-red-600 font-semibold'>{errorLogin}</p>}
+      </div>
+    )
   }
 
   return (
