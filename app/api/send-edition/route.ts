@@ -10,7 +10,7 @@ const supabase = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: Request) {
-  const { titulo, contenido } = await request.json()
+  const { titulo, contenido, imagenUrl } = await request.json()
 
   const { data: suscriptores } = await supabase
     .from('subscribers')
@@ -22,11 +22,31 @@ export async function POST(request: Request) {
 
   const emails = suscriptores.map(s => s.email)
 
+  const parrafos = contenido
+    .split('\n')
+    .filter((p: string) => p.trim() !== '')
+    .map((p: string) => `<p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1a1a1a;">${p}</p>`)
+    .join('')
+
+  const imagenHtml = imagenUrl
+    ? `<img src="${imagenUrl}" alt="${titulo}" style="width: 100%; border-radius: 12px; margin-bottom: 24px; display: block;" />`
+    : ''
+
+  const html = `
+    <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, Helvetica, Arial, sans-serif; padding: 24px;">
+      <h1 style="font-size: 28px; font-weight: bold; color: #1a1a1a; margin-bottom: 20px;">${titulo}</h1>
+      ${imagenHtml}
+      ${parrafos}
+      <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;" />
+      <p style="font-size: 13px; color: #888;">Viva Verdad Cuba</p>
+    </div>
+  `
+
   await resend.emails.send({
     from: 'Viva Verdad Cuba <noticias@vivaverdadcuba.com>',
     to: emails,
     subject: titulo,
-    text: contenido,
+    html: html,
   })
   return NextResponse.json({ ok: true })
 }
