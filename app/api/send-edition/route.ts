@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const emails = suscriptores.map(s => s.email)
 
   await resend.emails.send({
-    from: 'noticias@vivaverdadcuba.com',
+    from: 'Viva Verdad Cuba <noticias@vivaverdadcuba.com>',
     to: emails,
     subject: titulo,
     text: contenido,
