@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useSyncExternalStore } from 'react';
 
 const titular = 'font-[family-name:var(--font-playfair)]';
@@ -127,6 +128,13 @@ export default function Home() {
               </p>
             )}
           </div>
+
+          <Link
+            href="/noticias"
+            className="mt-8 inline-block text-sm text-[#1a1a1a]/60 underline decoration-[#1a1a1a]/25 underline-offset-4 hover:text-[#8b1a1a] hover:decoration-[#8b1a1a]"
+          >
+            Leer las noticias →
+          </Link>
         </section>
 
         {/* Pie */}
