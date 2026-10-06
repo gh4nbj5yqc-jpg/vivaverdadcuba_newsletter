@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/sitio";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +24,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Viva Verdad Cuba",
   description: "Recibe un resumen semanal de las noticias más importantes, directo en tu correo.",
 };

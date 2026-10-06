@@ -1,307 +1,157 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useCallback, useEffect, useState } from 'react'
+import { EVENTO_SESION_EXPIRADA } from '@/lib/admin-cliente'
+import EditorNoticia from '@/components/admin/EditorNoticia'
+import Historial from '@/components/admin/Historial'
+import Suscriptores from '@/components/admin/Suscriptores'
+import { avisoError, botonPeligro, botonPrimario, campo, etiqueta, titular } from '@/components/admin/estilos'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+type Pestana = 'correo' | 'web' | 'suscriptores' | 'historial'
 
-type Suscriptor = { id: string; email: string; created_at: string }
-type Edicion = { id: string; title: string; content: string; image_url: string | null; sent: boolean; published_at: string }
+const PESTANAS: { id: Pestana; nombre: string }[] = [
+  { id: 'correo', nombre: 'Correo' },
+  { id: 'web', nombre: 'Web' },
+  { id: 'suscriptores', nombre: 'Suscriptores' },
+  { id: 'historial', nombre: 'Historial' },
+]
 
 export default function AdminPage() {
   const [autenticado, setAutenticado] = useState(false)
   const [password, setPassword] = useState('')
   const [errorLogin, setErrorLogin] = useState('')
+  const [entrando, setEntrando] = useState(false)
 
-  const [seccion, setSeccion] = useState<'enviar' | 'suscriptores' | 'historial'>('enviar')
-
-  const [titulo, setTitulo] = useState('')
-  const [contenido, setContenido] = useState('')
-  const [imagen, setImagen] = useState<File | null>(null)
-  const [imagenPreview, setImagenPreview] = useState('')
-  const [subiendoImagen, setSubiendoImagen] = useState(false)
-  const [mensaje, setMensaje] = useState('')
-  const [cargando, setCargando] = useState(false)
-
-  const [suscriptores, setSuscriptores] = useState<Suscriptor[]>([])
-  const [cargandoSuscriptores, setCargandoSuscriptores] = useState(false)
-
-  const [ediciones, setEdiciones] = useState<Edicion[]>([])
-  const [cargandoEdiciones, setCargandoEdiciones] = useState(false)
-
-  async function verificarPassword() {
-    setErrorLogin('')
-    const res = await fetch('/api/check-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    })
-    const data = await res.json()
-    if (data.ok) {
-      setAutenticado(true)
-    } else {
-      setErrorLogin('Contraseña incorrecta')
-    }
-  }
-
-  function sesionExpirada() {
-    setAutenticado(false)
-    setCargando(false)
-    setSubiendoImagen(false)
-    setCargandoSuscriptores(false)
-    setCargandoEdiciones(false)
-    setErrorLogin('Tu sesión expiró. Vuelve a entrar.')
-  }
-
-  async function cargarSuscriptores() {
-    setCargandoSuscriptores(true)
-    const res = await fetch('/api/subscribers')
-    if (res.status === 401) return sesionExpirada()
-    const data = await res.json()
-    setSuscriptores(data.suscriptores || [])
-    setCargandoSuscriptores(false)
-  }
-
-  async function eliminarSuscriptor(id: string) {
-    if (!confirm('¿Seguro que quieres eliminar este suscriptor?')) return
-    const res = await fetch('/api/subscribers', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    })
-    if (res.status === 401) return sesionExpirada()
-    cargarSuscriptores()
-  }
-
-  async function cargarEdiciones() {
-    setCargandoEdiciones(true)
-    const res = await fetch('/api/editions')
-    if (res.status === 401) return sesionExpirada()
-    const data = await res.json()
-    setEdiciones(data.ediciones || [])
-    setCargandoEdiciones(false)
-  }
+  const [pestana, setPestana] = useState<Pestana>('correo')
+  // Cambiar "clave" vuelve a montar el editor con otra noticia (o una nueva).
+  const [abierta, setAbierta] = useState<{ id: string | null; clave: number }>({ id: null, clave: 0 })
+  const [hayCambios, setHayCambios] = useState(false)
+  const [descartar, setDescartar] = useState<null | (() => void)>(null)
 
   useEffect(() => {
-    if (autenticado && seccion === 'suscriptores') cargarSuscriptores()
-    if (autenticado && seccion === 'historial') cargarEdiciones()
-  }, [autenticado, seccion])
+    function expiro() {
+      setAutenticado(false)
+      setErrorLogin('Tu sesión expiró. Vuelve a entrar.')
+    }
+    window.addEventListener(EVENTO_SESION_EXPIRADA, expiro)
+    return () => window.removeEventListener(EVENTO_SESION_EXPIRADA, expiro)
+  }, [])
 
-  function seleccionarImagen(e: React.ChangeEvent<HTMLInputElement>) {
-    const archivo = e.target.files?.[0]
-    if (archivo) {
-      setImagen(archivo)
-      setImagenPreview(URL.createObjectURL(archivo))
+  const onCambiosPendientes = useCallback((hay: boolean) => setHayCambios(hay), [])
+
+  async function verificarPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setErrorLogin('')
+    setEntrando(true)
+    try {
+      const res = await fetch('/api/check-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setAutenticado(true)
+        setPassword('')
+      } else {
+        setErrorLogin('Contraseña incorrecta')
+      }
+    } catch {
+      setErrorLogin('No hay conexión. Inténtalo de nuevo.')
+    } finally {
+      setEntrando(false)
     }
   }
 
-  async function enviar() {
-    if (!titulo || !contenido) {
-      setMensaje('Por favor escribe el titulo y el contenido')
-      return
-    }
+  // Si hay cambios sin guardar, pide confirmación antes de cambiar de noticia.
+  function protegerCambios(accion: () => void) {
+    if (hayCambios) setDescartar(() => accion)
+    else accion()
+  }
 
-    setCargando(true)
-    setMensaje('')
-
-    let imagenUrl = ''
-
-    if (imagen) {
-      setSubiendoImagen(true)
-      const resUrl = await fetch('/api/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: imagen.name })
-      })
-      if (resUrl.status === 401) return sesionExpirada()
-      const firmada = await resUrl.json()
-
-      const { error: errorSubida } = firmada.token
-        ? await supabase.storage
-            .from('newsletter-images')
-            .uploadToSignedUrl(firmada.ruta, firmada.token, imagen)
-        : { error: { message: firmada.error || 'no se pudo preparar la subida' } }
-
-      if (errorSubida) {
-        setMensaje('Error subiendo la imagen: ' + errorSubida.message)
-        setCargando(false)
-        setSubiendoImagen(false)
-        return
-      }
-
-      imagenUrl = firmada.publicUrl
-      setSubiendoImagen(false)
-    }
-
-    const res = await fetch('/api/send-edition', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ titulo, contenido, imagenUrl })
+  function abrirNoticia(id: string | null, parte: 'correo' | 'web') {
+    protegerCambios(() => {
+      setAbierta(prev => ({ id, clave: prev.clave + 1 }))
+      setHayCambios(false)
+      setPestana(parte)
+      setDescartar(null)
     })
-    if (res.status === 401) return sesionExpirada()
-    const data = await res.json()
-    if (data.ok) {
-      setMensaje('Edicion enviada exitosamente!')
-      setTitulo('')
-      setContenido('')
-      setImagen(null)
-      setImagenPreview('')
-    } else {
-      setMensaje('Error: ' + (data.error || 'algo salio mal'))
-    }
-    setCargando(false)
+  }
+
+  // Si se borra la noticia abierta en el editor, se cambia a una noticia nueva.
+  function noticiaEliminada(id: string) {
+    if (abierta.id !== id) return
+    setAbierta(prev => ({ id: null, clave: prev.clave + 1 }))
+    setHayCambios(false)
+    setDescartar(null)
   }
 
   if (!autenticado) {
     return (
-      <div className='min-h-screen bg-white p-8 max-w-sm mx-auto flex flex-col justify-center'>
-        <h1 className='text-2xl font-bold text-gray-900 mb-6'>Acceso al Panel de Admin</h1>
-        <input
-          type='password'
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') verificarPassword() }}
-          className='w-full border border-gray-300 rounded p-3 text-gray-900 mb-4'
-          placeholder='Contraseña'
-        />
-        <button
-          onClick={verificarPassword}
-          className='bg-black text-white px-6 py-3 rounded font-semibold hover:bg-gray-800'
-        >
-          Entrar
-        </button>
-        {errorLogin && <p className='mt-4 text-red-600 font-semibold'>{errorLogin}</p>}
-      </div>
+      <main className="min-h-screen bg-[#fbf8f1] px-5 font-[family-name:var(--font-source-serif)] text-[#1a1a1a]">
+        <form onSubmit={verificarPassword} className="mx-auto flex min-h-screen max-w-sm flex-col justify-center py-10">
+          <p className={`${titular} text-center text-3xl font-black`}>Viva Verdad Cuba</p>
+          <div className="mt-4 border-t-[3px] border-b border-[#1a1a1a] pt-[3px]" />
+          <h1 className="mt-6 mb-6 text-center text-xs uppercase tracking-[0.25em] text-[#1a1a1a]/60">Panel de administración</h1>
+          <label className={etiqueta} htmlFor="password">Contraseña</label>
+          <input id="password" type="password" autoComplete="current-password" value={password}
+            onChange={e => setPassword(e.target.value)} className={`${campo} mb-4`} required />
+          <button type="submit" disabled={entrando} className={botonPrimario}>{entrando ? 'Entrando…' : 'Entrar'}</button>
+          {errorLogin && <p role="alert" className={`${avisoError} mt-4`}>{errorLogin}</p>}
+        </form>
+      </main>
     )
   }
 
+  const editando = pestana === 'correo' || pestana === 'web'
+
   return (
-    <div className='min-h-screen bg-white p-8 max-w-2xl mx-auto'>
-      <h1 className='text-3xl font-bold text-gray-900 mb-6'>Panel de Admin</h1>
+    <main className="min-h-screen bg-[#fbf8f1] font-[family-name:var(--font-source-serif)] text-[#1a1a1a]">
+      <div className="mx-auto max-w-2xl px-4 pb-16 sm:px-8">
+        <header className="pt-6 pb-4 text-center">
+          <p className={`${titular} text-2xl font-black sm:text-4xl`}>Viva Verdad Cuba</p>
+          <div className="mt-3 border-t-[3px] border-b border-[#1a1a1a] pt-[3px]" />
+          <h1 className="mt-2 text-xs uppercase tracking-[0.25em] text-[#1a1a1a]/60">Panel de administración</h1>
+        </header>
 
-      <div className='flex gap-2 mb-8 border-b border-gray-200'>
-        <button
-          onClick={() => setSeccion('enviar')}
-          className={`px-4 py-2 font-semibold ${seccion === 'enviar' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
-        >
-          Enviar edición
-        </button>
-        <button
-          onClick={() => setSeccion('suscriptores')}
-          className={`px-4 py-2 font-semibold ${seccion === 'suscriptores' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
-        >
-          Suscriptores
-        </button>
-        <button
-          onClick={() => setSeccion('historial')}
-          className={`px-4 py-2 font-semibold ${seccion === 'historial' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
-        >
-          Historial
-        </button>
+        <nav className="sticky top-[env(safe-area-inset-top,0px)] z-10 -mx-4 grid grid-cols-4 border-b border-[#1a1a1a]/30 bg-[#fbf8f1] px-4 sm:-mx-8 sm:px-8">
+          {PESTANAS.map(p => (
+            <button key={p.id} type="button" onClick={() => setPestana(p.id)} aria-current={pestana === p.id ? 'page' : undefined}
+              className={`min-h-12 border-b-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] sm:text-sm ${pestana === p.id ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent text-[#1a1a1a]/50'}`}>
+              {p.nombre}
+            </button>
+          ))}
+        </nav>
+
+        {descartar && (
+          <div role="alertdialog" aria-label="Cambios sin guardar" className="mt-4 flex flex-wrap items-center gap-2 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-3">
+            <p className="mr-auto text-[#6b1414]">Tienes cambios sin guardar en la noticia abierta. ¿Descartarlos?</p>
+            <button type="button" className={botonPeligro} onClick={descartar}>Descartar cambios</button>
+            <button type="button" className="min-h-11 px-3 text-sm underline" onClick={() => setDescartar(null)}>Seguir editando</button>
+          </div>
+        )}
+
+        {editando && (
+          <div className="mt-4 mb-6 flex items-center justify-between gap-3 border-b border-[#1a1a1a]/15 pb-4">
+            <p className="text-sm text-[#1a1a1a]/70">{abierta.id ? 'Editando una noticia guardada' : 'Noticia nueva'}</p>
+            <button type="button" onClick={() => abrirNoticia(null, pestana as 'correo' | 'web')}
+              className="min-h-11 border border-[#1a1a1a]/40 px-4 text-sm font-semibold hover:border-[#1a1a1a]">
+              + Nueva noticia
+            </button>
+          </div>
+        )}
+
+        {/* El editor sigue montado al pasar a Suscriptores o Historial para no perder lo escrito. */}
+        <div hidden={!editando}>
+          <EditorNoticia key={abierta.clave} idInicial={abierta.id} parte={pestana === 'web' ? 'web' : 'correo'}
+            onCambiosPendientes={onCambiosPendientes} />
+        </div>
+
+        <div className="mt-6">
+          {pestana === 'suscriptores' && <Suscriptores />}
+          {pestana === 'historial' && <Historial onAbrir={abrirNoticia} onEliminada={noticiaEliminada} />}
+        </div>
       </div>
-
-      {seccion === 'enviar' && (
-        <div>
-          <div className='mb-6'>
-            <label className='block text-gray-700 font-semibold mb-2'>Imagen principal (opcional)</label>
-            <input
-              type='file'
-              accept='image/*'
-              onChange={seleccionarImagen}
-              className='w-full border border-gray-300 rounded p-3 text-gray-900'
-            />
-            {imagenPreview && (
-              <img src={imagenPreview} alt='Vista previa' className='mt-3 rounded max-h-64 object-cover' />
-            )}
-          </div>
-
-          <div className='mb-4'>
-            <label className='block text-gray-700 font-semibold mb-2'>Titulo de la edicion</label>
-            <input
-              type='text'
-              value={titulo}
-              onChange={e => setTitulo(e.target.value)}
-              className='w-full border border-gray-300 rounded p-3 text-gray-900'
-              placeholder='Ej: Edicion 1 - Noticias de la semana'
-            />
-          </div>
-          <div className='mb-6'>
-            <label className='block text-gray-700 font-semibold mb-2'>Contenido</label>
-            <textarea
-              value={contenido}
-              onChange={e => setContenido(e.target.value)}
-              className='w-full border border-gray-300 rounded p-3 text-gray-900 h-64'
-              placeholder='Escribe aqui el contenido de tu newsletter...'
-            />
-          </div>
-          <button
-            onClick={enviar}
-            disabled={cargando}
-            className='bg-black text-white px-6 py-3 rounded font-semibold hover:bg-gray-800 disabled:opacity-50'
-          >
-            {subiendoImagen ? 'Subiendo imagen...' : cargando ? 'Enviando...' : 'Enviar a suscriptores'}
-          </button>
-          {mensaje && <p className='mt-4 text-green-600 font-semibold'>{mensaje}</p>}
-        </div>
-      )}
-
-      {seccion === 'suscriptores' && (
-        <div>
-          <p className='text-gray-600 mb-4'>{suscriptores.length} suscriptores</p>
-          {cargandoSuscriptores ? (
-            <p>Cargando...</p>
-          ) : (
-            <div className='divide-y divide-gray-200'>
-              {suscriptores.map(s => (
-                <div key={s.id} className='flex justify-between items-center py-3'>
-                  <div>
-                    <p className='font-medium text-gray-900'>{s.email}</p>
-                    <p className='text-sm text-gray-500'>
-                      {new Date(s.created_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => eliminarSuscriptor(s.id)}
-                    className='text-red-600 hover:text-red-800 font-semibold text-sm'
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {seccion === 'historial' && (
-        <div>
-          {cargandoEdiciones ? (
-            <p>Cargando...</p>
-          ) : ediciones.length === 0 ? (
-            <p className='text-gray-500'>No has enviado ninguna edición todavía.</p>
-          ) : (
-            <div className='space-y-4'>
-              {ediciones.map(ed => (
-                <div key={ed.id} className='border border-gray-200 rounded p-4'>
-                  <div className='flex justify-between items-start'>
-                    <h3 className='font-semibold text-gray-900'>{ed.title}</h3>
-                    <span className='text-xs text-gray-500'>
-                      {new Date(ed.published_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </span>
-                  </div>
-                  {ed.image_url && (
-                    <img src={ed.image_url} alt={ed.title} className='mt-2 rounded max-h-40 object-cover' />
-                  )}
-                  <p className='text-gray-600 text-sm mt-2 line-clamp-3'>{ed.content}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    </main>
   )
 }

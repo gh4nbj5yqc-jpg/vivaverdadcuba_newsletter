@@ -1,18 +1,27 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { esAdmin, noAutorizado } from '@/lib/admin-auth'
+import { ErrorNoticia, guardarNoticia, listarNoticias } from '@/lib/noticias-admin'
 
 export async function GET() {
   if (!(await esAdmin())) return noAutorizado()
 
-  const { data, error } = await supabase
-    .from('editions')
-    .select('id, title, content, image_url, sent, published_at')
-    .order('published_at', { ascending: false })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  try {
+    return NextResponse.json({ ediciones: await listarNoticias() })
+  } catch (e) {
+    const err = e as ErrorNoticia
+    return NextResponse.json({ error: err.message }, { status: err.status ?? 500 })
   }
+}
 
-  return NextResponse.json({ ediciones: data })
+// Crea una noticia nueva guardando su parte de correo o su parte web.
+export async function POST(request: Request) {
+  if (!(await esAdmin())) return noAutorizado()
+
+  try {
+    const cuerpo = await request.json()
+    return NextResponse.json({ edicion: await guardarNoticia(null, cuerpo) })
+  } catch (e) {
+    const err = e instanceof ErrorNoticia ? e : new ErrorNoticia('Datos no válidos')
+    return NextResponse.json({ error: err.message }, { status: err.status })
+  }
 }
