@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
+import { esAdmin, noAutorizado } from '@/lib/admin-auth'
 import { Resend } from 'resend'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: Request) {
+  if (!(await esAdmin())) return noAutorizado()
+
   const { titulo, contenido, imagenUrl } = await request.json()
 
   const { data: suscriptores } = await supabase
@@ -48,5 +46,13 @@ export async function POST(request: Request) {
     subject: titulo,
     html: html,
   })
+
+  await supabase.from('editions').insert([{
+    title: titulo,
+    content: contenido,
+    image_url: imagenUrl || null,
+    sent: true,
+  }])
+
   return NextResponse.json({ ok: true })
 }
