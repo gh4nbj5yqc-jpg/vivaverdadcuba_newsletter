@@ -10,8 +10,3 @@ export function urlNoticia(id: string) {
 
 // Remitente de los correos (dominio verificado en Resend).
 export const REMITENTE = 'Viva Verdad Cuba <noticias@vivaverdadcuba.com>'
-
-// Buzon que REALMENTE lee alguien, para pedir la baja respondiendo "BAJA".
-// Mientras sea null, el correo no muestra la linea de baja ni la cabecera
-// List-Unsubscribe: no prometemos una baja que nadie atiende.
-export const CORREO_BAJA: string | null = null

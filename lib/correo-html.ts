@@ -1,5 +1,5 @@
 import { bloquesVisibles, parrafos, urlImagenPermitida, type Bloque } from '@/lib/bloques'
-import { CORREO_BAJA, NOMBRE_SITIO, SITE_URL, urlNoticia } from '@/lib/sitio'
+import { NOMBRE_SITIO, SITE_URL, urlNoticia } from '@/lib/sitio'
 
 // UNICA funcion que construye el correo. La usan la vista previa, el envio de
 // prueba y el envio a suscriptores, siempre con lo guardado en la base de datos.
@@ -12,6 +12,8 @@ export type DatosCorreo = {
   bloques: Bloque[]
   // ids de articulos web publicados: un boton solo se dibuja si su articulo esta aqui.
   publicados: Set<string>
+  // Enlace "Darme de baja" de ESTE destinatario (en la vista previa y la prueba, uno que no da de baja a nadie).
+  enlaceBaja: string
   fecha: Date
 }
 
@@ -50,7 +52,7 @@ function boton(href: string) {
 </td></tr></table>`
 }
 
-export function construirCorreo({ asunto, bloques, publicados, fecha }: DatosCorreo): CorreoConstruido {
+export function construirCorreo({ asunto, bloques, publicados, fecha, enlaceBaja }: DatosCorreo): CorreoConstruido {
   const errores: string[] = []
   const avisos: string[] = []
   const visibles = bloquesVisibles(bloques)
@@ -107,9 +109,6 @@ export function construirCorreo({ asunto, bloques, publicados, fecha }: DatosCor
   if (textosPrevios === 0) errores.push('El correo no tiene ningún texto.')
 
   const urlNoticias = `${SITE_URL}/noticias`
-  const lineaBaja = CORREO_BAJA
-    ? `<p style="margin:10px 0 0 0;font-family:${FUENTE};font-size:12px;line-height:1.5;color:${GRIS};">¿No quieres recibir más correos? Responde a este mensaje con la palabra BAJA y te daremos de baja.</p>`
-    : ''
 
   const html = `<!DOCTYPE html>
 <html lang="es" xmlns="http://www.w3.org/1999/xhtml">
@@ -138,7 +137,7 @@ ${filas.join('\n')}
 <p style="margin:0;font-family:${FUENTE};font-size:15px;font-weight:bold;color:${TINTA};text-align:center;">${escapar(NOMBRE_SITIO)}</p>
 <p style="margin:6px 0 0 0;font-family:${FUENTE};font-size:13px;line-height:1.5;color:${GRIS};text-align:center;">Lee todas las noticias en <a href="${escapar(urlNoticias)}" target="_blank" style="color:${TINTA};">${escapar(urlNoticias.replace(/^https:\/\//, ''))}</a></p>
 <p style="margin:10px 0 0 0;font-family:${FUENTE};font-size:12px;line-height:1.5;color:${GRIS};text-align:center;">Recibes este correo porque te suscribiste en ${escapar(SITE_URL.replace(/^https:\/\//, ''))}.</p>
-${lineaBaja.replace('<p style="', '<p style="text-align:center;')}
+<p style="margin:10px 0 0 0;font-family:${FUENTE};font-size:12px;line-height:1.5;color:${GRIS};text-align:center;">¿No quieres recibir más correos? <a href="${escapar(enlaceBaja)}" target="_blank" style="color:${GRIS};text-decoration:underline;">Darme de baja</a></p>
 </td></tr>
 </table>
 </td></tr>
@@ -147,7 +146,7 @@ ${lineaBaja.replace('<p style="', '<p style="text-align:center;')}
 </html>`
 
   texto.push('—', NOMBRE_SITIO, `Lee todas las noticias en ${urlNoticias}`)
-  if (CORREO_BAJA) texto.push('¿No quieres recibir más correos? Responde a este mensaje con la palabra BAJA.')
+  texto.push(`¿No quieres recibir más correos? Date de baja aquí: ${enlaceBaja}`)
 
   const bytes = new TextEncoder().encode(html).length
   if (bytes > LIMITE_AVISO_BYTES) {
