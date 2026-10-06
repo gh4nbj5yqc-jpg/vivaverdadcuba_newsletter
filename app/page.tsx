@@ -70,10 +70,9 @@ export default function Home() {
 
         {/* Contenido principal */}
         <section className="border-t border-[#1a1a1a]/20 pt-10 pb-12 text-center sm:pt-14">
-          <h2 className={`${titular} text-3xl font-bold leading-tight sm:text-5xl`}>
-            Lo que pasa en Cuba,
-            <br className="hidden sm:block" />{' '}
-            <span className="italic font-normal">contado con verdad.</span>
+          <h2 className={`${titular} text-3xl font-bold leading-tight text-balance sm:text-5xl`}>
+            Lo que pasa en Cuba y el mundo,
+            <span className="block italic font-normal">contado con verdad.</span>
           </h2>
 
           <p className="mx-auto mt-5 max-w-md text-lg leading-relaxed text-[#1a1a1a]/75 sm:text-xl">
