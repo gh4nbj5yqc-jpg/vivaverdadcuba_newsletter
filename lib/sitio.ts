@@ -4,6 +4,9 @@ export const SITE_URL = 'https://www.vivaverdadcuba.com'
 
 export const NOMBRE_SITIO = 'Viva Verdad Cuba'
 
+// Perfil de Instagram. Si cambia el usuario, solo hay que cambiarlo aqui.
+export const INSTAGRAM_URL = 'https://www.instagram.com/viva_verdad_cuba/'
+
 export function urlNoticia(id: string) {
   return `${SITE_URL}/noticias/${encodeURIComponent(id)}`
 }
