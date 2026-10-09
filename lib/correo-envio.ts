@@ -27,7 +27,7 @@ type CorreoCargado = {
 export async function cargarCorreo(id: string): Promise<CorreoCargado> {
   const noticia = await obtenerNoticia(id)
   if (esAntigua(noticia) || !noticia.blocks) {
-    throw new ErrorNoticia('Esta noticia no tiene versión de correo guardada. Escríbela en la pestaña Correo y guárdala.')
+    throw new ErrorNoticia('Esta noticia todavía no tiene correo. Ábrela en el editor y pulsa Guardar.')
   }
   const enlaces = noticia.blocks.flatMap(b => (b.tipo === 'texto' && b.enlaceId ? [b.enlaceId] : []))
   const publicados = await idsPublicados([...new Set(enlaces)])

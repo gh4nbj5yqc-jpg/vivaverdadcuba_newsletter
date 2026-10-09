@@ -1,4 +1,4 @@
-import { bloquesVisibles, parrafos, urlImagenPermitida, type Bloque } from '@/lib/bloques'
+import { bloquesVisibles, ID_TITULAR, parrafos, urlImagenPermitida, type Bloque } from '@/lib/bloques'
 import { NOMBRE_SITIO, SITE_URL, urlNoticia } from '@/lib/sitio'
 
 // UNICA funcion que construye el correo. La usan la vista previa, el envio de
@@ -80,6 +80,17 @@ export function construirCorreo({ asunto, bloques, publicados, fecha, enlaceBaja
       continue
     }
 
+    // El titular de la noticia abre el correo, en grande. No cuenta como texto del correo.
+    if (b.id === ID_TITULAR) {
+      filas.push(
+        fila(
+          `<h1 style="margin:0;font-family:${FUENTE};font-size:30px;line-height:1.2;font-weight:bold;color:${TINTA};">${escapar(b.subtitulo)}</h1>`,
+          '4px 28px 12px 28px'
+        )
+      )
+      continue
+    }
+
     const partes: string[] = []
     if (b.subtitulo) {
       if (textosPrevios > 0) {
@@ -105,8 +116,8 @@ export function construirCorreo({ asunto, bloques, publicados, fecha, enlaceBaja
     textosPrevios++
   }
 
-  if (!asunto.trim()) errores.push('Falta el asunto del correo.')
-  if (textosPrevios === 0) errores.push('El correo no tiene ningún texto.')
+  if (!asunto.trim()) errores.push('Falta el titular (es también el asunto del correo).')
+  if (textosPrevios === 0) errores.push('La noticia no tiene ningún texto.')
 
   const urlNoticias = `${SITE_URL}/noticias`
 

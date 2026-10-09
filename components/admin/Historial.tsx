@@ -6,7 +6,7 @@ import type { NoticiaAdmin } from '@/lib/noticias-admin'
 import { avisoError, avisoOk, titular } from './estilos'
 
 type Props = {
-  onAbrir: (id: string, parte: 'correo' | 'web') => void
+  onAbrir: (id: string) => void
   onEliminada: (id: string) => void
 }
 
@@ -84,15 +84,13 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
                       <Estado texto={n.sent ? 'Enviado (formato antiguo)' : 'Formato antiguo'} tono="apagado" />
                     ) : n.sent ? (
                       <Estado texto="Enviado" tono="ok" />
-                    ) : n.blocks ? (
-                      <Estado texto="No enviado" tono="neutro" />
                     ) : (
-                      <Estado texto="Sin correo" tono="apagado" />
+                      <Estado texto="No enviado" tono="neutro" />
                     )}
                   </span>
                   <span className="flex items-center gap-2">
                     Web:
-                    {antigua || !n.web_blocks ? (
+                    {antigua ? (
                       <Estado texto="Sin versión web" tono="apagado" />
                     ) : publicada ? (
                       <Estado texto="Publicada" tono="ok" />
@@ -104,20 +102,14 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
 
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   {!antigua && (
-                    <>
-                      <button type="button" onClick={() => onAbrir(id, 'web')}
-                        className="min-h-12 border border-[#1a1a1a] px-4 text-sm font-semibold hover:bg-[#1a1a1a] hover:text-[#fbf8f1]">
-                        Editar web
-                      </button>
-                      <button type="button" onClick={() => onAbrir(id, 'correo')}
-                        className="min-h-12 border border-[#1a1a1a]/40 px-4 text-sm font-semibold hover:border-[#1a1a1a]">
-                        {n.sent ? 'Ver correo' : 'Editar correo'}
-                      </button>
-                    </>
+                    <button type="button" onClick={() => onAbrir(id)}
+                      className="min-h-12 border border-[#1a1a1a] px-4 text-sm font-semibold hover:bg-[#1a1a1a] hover:text-[#fbf8f1]">
+                      Editar
+                    </button>
                   )}
                   <button type="button" onClick={() => { setConfirmando(id); setAviso(null) }}
                     disabled={eliminando !== null}
-                    className="col-span-2 min-h-12 border border-[#8b1a1a] bg-white px-4 text-sm font-semibold text-[#8b1a1a] transition hover:bg-[#8b1a1a] hover:text-white disabled:opacity-50 sm:col-span-1">
+                    className={`${antigua ? 'col-span-2' : ''} min-h-12 border border-[#8b1a1a] bg-white px-4 text-sm font-semibold text-[#8b1a1a] transition hover:bg-[#8b1a1a] hover:text-white disabled:opacity-50 sm:col-span-1`}>
                     Eliminar
                   </button>
                 </div>
@@ -125,7 +117,7 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
                 {confirmando === id && (
                   <div role="alertdialog" aria-labelledby={`borrar-${id}`} className="mt-4 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-4 text-[#6b1414]">
                     <p id={`borrar-${id}`} className="font-semibold">¿Eliminar «{nombreDe(n)}»?</p>
-                    <p className="mt-2">Esto borra la noticia para siempre: su versión de correo y su versión web.</p>
+                    <p className="mt-2">Esto borra la noticia para siempre.</p>
                     {publicada && (
                       <p className="mt-2">
                         Está publicada en la web: dejará de verse en /noticias, y los enlaces que apunten a ella llevarán a una

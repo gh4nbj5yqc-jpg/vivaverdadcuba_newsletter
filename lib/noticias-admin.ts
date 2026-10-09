@@ -1,5 +1,16 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { MAX_IMAGENES, normalizarBloques, textoPlano, tieneTexto, urlImagenPermitida, type Bloque } from '@/lib/bloques'
+import {
+  bloquesDeCorreo,
+  ID_PORTADA,
+  ID_TITULAR,
+  MAX_IMAGENES,
+  normalizarBloques,
+  nuevoId,
+  textoPlano,
+  tieneTexto,
+  urlImagenPermitida,
+  type Bloque,
+} from '@/lib/bloques'
 
 // Solo servidor: lectura y guardado de noticias para el panel de admin.
 
@@ -71,7 +82,8 @@ function str(valor: unknown, max: number, campo: string) {
   return limpio
 }
 
-// Guarda la parte de correo o la parte web. Si id es null, crea la noticia.
+// Guarda la noticia. Se escribe una sola vez y sirve para la web y para el correo:
+// el correo lleva el titular, la portada y el mismo contenido. Si id es null, crea la noticia.
 export async function guardarNoticia(id: string | null, cuerpo: Record<string, unknown>) {
   const actual = id ? await obtenerNoticia(id) : null
   if (actual && esAntigua(actual)) {
@@ -82,47 +94,37 @@ export async function guardarNoticia(id: string | null, cuerpo: Record<string, u
   let cambios: Record<string, unknown>
 
   try {
-    if (cuerpo.parte === 'correo') {
-      if (actual?.sent) throw new ErrorNoticia('Este correo ya se envió y no se puede modificar')
-      const bloques = normalizarBloques(cuerpo.bloques, 'correo')
-      const enlaces = [...new Set(bloques.flatMap(b => (b.tipo === 'texto' && b.enlaceId ? [b.enlaceId] : [])))]
-      const publicados = await idsPublicados(enlaces)
-      const roto = enlaces.find(e => !publicados.has(e))
-      if (roto) throw new ErrorNoticia('Un botón apunta a un artículo que no está publicado. Elige otro o quítalo.')
+    const estado: EstadoWeb = cuerpo.estado === 'publicada' ? 'publicada' : 'borrador'
+    const portada = str(cuerpo.portada, 2000, 'portada')
+    if (portada && !urlImagenPermitida(portada)) {
+      throw new ErrorNoticia('La imagen de portada no viene del almacenamiento de la newsletter')
+    }
+    // Los ids "titular" y "portada" estan reservados para la cabecera del correo.
+    const bloques = normalizarBloques(cuerpo.bloques, 'web', MAX_IMAGENES - (portada ? 1 : 0)).map(b =>
+      b.id === ID_TITULAR || b.id === ID_PORTADA ? { ...b, id: nuevoId() } : b
+    )
+    const titular = str(cuerpo.titulo, 200, 'titular')
 
-      cambios = {
-        title: str(cuerpo.asunto, 200, 'asunto'),
-        content: textoPlano(bloques),
-        blocks: bloques,
-      }
-    } else if (cuerpo.parte === 'web') {
-      const estado: EstadoWeb = cuerpo.estado === 'publicada' ? 'publicada' : 'borrador'
-      const portada = str(cuerpo.portada, 2000, 'portada')
-      if (portada && !urlImagenPermitida(portada)) {
-        throw new ErrorNoticia('La imagen de portada no viene del almacenamiento de la newsletter')
-      }
-      const bloques = normalizarBloques(cuerpo.bloques, 'web', MAX_IMAGENES - (portada ? 1 : 0))
-      const titular = str(cuerpo.titulo, 200, 'titular')
+    if (estado === 'publicada') {
+      if (!titular) throw new ErrorNoticia('Escribe el titular antes de publicar')
+      if (!tieneTexto(bloques)) throw new ErrorNoticia('Escribe al menos un párrafo antes de publicar')
+    }
 
-      if (estado === 'publicada') {
-        if (!titular) throw new ErrorNoticia('Escribe el titular antes de publicar')
-        if (!tieneTexto(bloques)) throw new ErrorNoticia('Escribe al menos un párrafo antes de publicar')
-      }
+    cambios = {
+      web_title: titular,
+      web_cover_url: portada || null,
+      web_blocks: bloques,
+      web_status: estado,
+      web_published_at: estado === 'publicada' ? actual?.web_published_at ?? ahora : actual?.web_published_at ?? null,
+    }
 
-      cambios = {
-        web_title: titular,
-        web_cover_url: portada || null,
-        web_blocks: bloques,
-        web_status: estado,
-        web_published_at: estado === 'publicada' ? actual?.web_published_at ?? ahora : actual?.web_published_at ?? null,
-      }
-      // En una noticia nueva solo web, title/content se llenan por si la tabla los exige.
-      if (!actual) {
-        cambios.title = ''
-        cambios.content = ''
-      }
-    } else {
-      throw new ErrorNoticia('Falta indicar si se guarda el correo o la web')
+    // El correo lleva lo mismo que la web. Si ya se envio, se conserva tal como salio:
+    // los cambios posteriores solo afectan a la web.
+    if (!actual?.sent) {
+      const correo = bloquesDeCorreo(titular, portada, bloques)
+      cambios.title = titular
+      cambios.content = textoPlano(correo)
+      cambios.blocks = correo
     }
   } catch (e) {
     if (e instanceof ErrorNoticia) throw e

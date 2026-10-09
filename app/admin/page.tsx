@@ -7,11 +7,11 @@ import Historial from '@/components/admin/Historial'
 import Suscriptores from '@/components/admin/Suscriptores'
 import { avisoError, botonPeligro, botonPrimario, campo, etiqueta, titular } from '@/components/admin/estilos'
 
-type Pestana = 'correo' | 'web' | 'suscriptores' | 'historial'
+type Pestana = 'noticia' | 'suscriptores' | 'historial'
 
+// "Noticia" es el editor unico: lo que se escribe ahi sirve para la web y para el correo.
 const PESTANAS: { id: Pestana; nombre: string }[] = [
-  { id: 'correo', nombre: 'Correo' },
-  { id: 'web', nombre: 'Web' },
+  { id: 'noticia', nombre: 'Noticia' },
   { id: 'suscriptores', nombre: 'Suscriptores' },
   { id: 'historial', nombre: 'Historial' },
 ]
@@ -22,7 +22,7 @@ export default function AdminPage() {
   const [errorLogin, setErrorLogin] = useState('')
   const [entrando, setEntrando] = useState(false)
 
-  const [pestana, setPestana] = useState<Pestana>('correo')
+  const [pestana, setPestana] = useState<Pestana>('noticia')
   // Cambiar "clave" vuelve a montar el editor con otra noticia (o una nueva).
   const [abierta, setAbierta] = useState<{ id: string | null; clave: number }>({ id: null, clave: 0 })
   const [hayCambios, setHayCambios] = useState(false)
@@ -69,11 +69,11 @@ export default function AdminPage() {
     else accion()
   }
 
-  function abrirNoticia(id: string | null, parte: 'correo' | 'web') {
+  function abrirNoticia(id: string | null) {
     protegerCambios(() => {
       setAbierta(prev => ({ id, clave: prev.clave + 1 }))
       setHayCambios(false)
-      setPestana(parte)
+      setPestana('noticia')
       setDescartar(null)
     })
   }
@@ -103,7 +103,7 @@ export default function AdminPage() {
     )
   }
 
-  const editando = pestana === 'correo' || pestana === 'web'
+  const editando = pestana === 'noticia'
 
   return (
     <main className="min-h-screen bg-[#fbf8f1] font-[family-name:var(--font-source-serif)] text-[#1a1a1a]">
@@ -114,7 +114,7 @@ export default function AdminPage() {
           <h1 className="mt-2 text-xs uppercase tracking-[0.25em] text-[#1a1a1a]/60">Panel de administración</h1>
         </header>
 
-        <nav className="sticky top-[env(safe-area-inset-top,0px)] z-10 -mx-4 grid grid-cols-4 border-b border-[#1a1a1a]/30 bg-[#fbf8f1] px-4 sm:-mx-8 sm:px-8">
+        <nav className="sticky top-[env(safe-area-inset-top,0px)] z-10 -mx-4 grid grid-cols-3 border-b border-[#1a1a1a]/30 bg-[#fbf8f1] px-4 sm:-mx-8 sm:px-8">
           {PESTANAS.map(p => (
             <button key={p.id} type="button" onClick={() => setPestana(p.id)} aria-current={pestana === p.id ? 'page' : undefined}
               className={`min-h-12 border-b-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] sm:text-sm ${pestana === p.id ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent text-[#1a1a1a]/50'}`}>
@@ -134,7 +134,7 @@ export default function AdminPage() {
         {editando && (
           <div className="mt-4 mb-6 flex items-center justify-between gap-3 border-b border-[#1a1a1a]/15 pb-4">
             <p className="text-sm text-[#1a1a1a]/70">{abierta.id ? 'Editando una noticia guardada' : 'Noticia nueva'}</p>
-            <button type="button" onClick={() => abrirNoticia(null, pestana as 'correo' | 'web')}
+            <button type="button" onClick={() => abrirNoticia(null)}
               className="min-h-11 border border-[#1a1a1a]/40 px-4 text-sm font-semibold hover:border-[#1a1a1a]">
               + Nueva noticia
             </button>
@@ -143,8 +143,7 @@ export default function AdminPage() {
 
         {/* El editor sigue montado al pasar a Suscriptores o Historial para no perder lo escrito. */}
         <div hidden={!editando}>
-          <EditorNoticia key={abierta.clave} idInicial={abierta.id} parte={pestana === 'web' ? 'web' : 'correo'}
-            onCambiosPendientes={onCambiosPendientes} />
+          <EditorNoticia key={abierta.clave} idInicial={abierta.id} onCambiosPendientes={onCambiosPendientes} />
         </div>
 
         <div className="mt-6">

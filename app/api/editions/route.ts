@@ -13,7 +13,7 @@ export async function GET() {
   }
 }
 
-// Crea una noticia nueva guardando su parte de correo o su parte web.
+// Crea una noticia nueva (sirve para la web y para el correo).
 export async function POST(request: Request) {
   if (!(await esAdmin())) return noAutorizado()
 

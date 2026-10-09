@@ -77,6 +77,25 @@ export function bloquesVisibles(bloques: Bloque[]) {
   )
 }
 
+// --- Correo de una noticia ---
+// La noticia se escribe UNA sola vez. El correo se arma con estos bloques:
+// titular + portada (si hay) + el mismo contenido que sale en la web.
+// Titular y portada llevan un id fijo para poder reconocerlos despues.
+export const ID_TITULAR = 'titular'
+export const ID_PORTADA = 'portada'
+
+export function bloquesDeCorreo(titular: string, portada: string | null, bloques: Bloque[]): Bloque[] {
+  const cabecera: Bloque[] = []
+  if (titular) cabecera.push({ id: ID_TITULAR, tipo: 'texto', subtitulo: titular, texto: '', enlaceId: null })
+  if (portada) cabecera.push({ id: ID_PORTADA, tipo: 'imagen', url: portada, alt: '', pie: '' })
+  return [...cabecera, ...bloques]
+}
+
+// El camino inverso: quita titular y portada y deja solo el contenido.
+export function sinCabeceraDeCorreo(bloques: Bloque[]) {
+  return bloques.filter(b => b.id !== ID_TITULAR && b.id !== ID_PORTADA)
+}
+
 export function contarImagenes(bloques: Bloque[]) {
   return bloques.filter(b => b.tipo === 'imagen').length
 }

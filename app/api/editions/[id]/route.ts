@@ -20,7 +20,7 @@ export async function GET(_request: Request, { params }: Contexto) {
   }
 }
 
-// Actualiza la parte de correo o la parte web de una noticia existente.
+// Actualiza una noticia existente (web y correo a la vez).
 export async function PUT(request: Request, { params }: Contexto) {
   if (!(await esAdmin())) return noAutorizado()
 
