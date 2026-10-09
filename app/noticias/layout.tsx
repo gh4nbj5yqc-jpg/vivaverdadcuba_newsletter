@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import EnlaceInstagram from '@/components/EnlaceInstagram'
+import RedesSociales from '@/components/RedesSociales'
 
 export default function NoticiasLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,7 +21,7 @@ export default function NoticiasLayout({ children }: { children: React.ReactNode
         {children}
 
         <footer className="border-t border-[#1a1a1a]/20 py-6 text-center text-xs uppercase tracking-[0.2em] text-[#1a1a1a]/50">
-          <EnlaceInstagram className="mb-2" />
+          <RedesSociales className="mb-3" />
           <p>Viva Verdad Cuba</p>
         </footer>
       </div>

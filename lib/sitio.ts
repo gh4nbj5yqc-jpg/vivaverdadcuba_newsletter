@@ -4,8 +4,18 @@ export const SITE_URL = 'https://www.vivaverdadcuba.com'
 
 export const NOMBRE_SITIO = 'Viva Verdad Cuba'
 
-// Perfil de Instagram. Si cambia el usuario, solo hay que cambiarlo aqui.
-export const INSTAGRAM_URL = 'https://www.instagram.com/viva_verdad_cuba/'
+// Redes sociales. Las que todavia no existen llevan null: salen opacas y sin enlace.
+// Cuando abras una cuenta, cambia null por la direccion del perfil (entre comillas)
+// y ese logo se activa solo, a todo color.
+export type Red = 'instagram' | 'facebook' | 'x' | 'threads' | 'tiktok'
+
+export const REDES: Record<Red, string | null> = {
+  instagram: 'https://www.instagram.com/viva_verdad_cuba/',
+  facebook: null,
+  x: null,
+  threads: null,
+  tiktok: null,
+}
 
 export function urlNoticia(id: string) {
   return `${SITE_URL}/noticias/${encodeURIComponent(id)}`

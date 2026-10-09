@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useSyncExternalStore } from 'react';
-import EnlaceInstagram from '@/components/EnlaceInstagram';
+import RedesSociales from '@/components/RedesSociales';
 
 const titular = 'font-[family-name:var(--font-playfair)]';
 const texto = 'font-[family-name:var(--font-source-serif)]';
@@ -136,9 +136,7 @@ export default function Home() {
             Leer las noticias →
           </Link>
 
-          <div className="mt-6 flex justify-center">
-            <EnlaceInstagram />
-          </div>
+          <RedesSociales className="mt-6" />
         </section>
 
         {/* Pie */}
