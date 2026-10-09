@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { connection } from 'next/server'
-import { listarArticulos, formatearFecha, adelanto, portadaDe } from '@/lib/ediciones'
+import CuerpoNoticia from '@/components/noticias/CuerpoNoticia'
+import { urlImagenPermitida } from '@/lib/bloques'
+import { listarArticulos, formatearFecha } from '@/lib/ediciones'
 import { NOMBRE_SITIO } from '@/lib/sitio'
 
 const descripcion =
@@ -43,31 +45,35 @@ export default async function NoticiasPage() {
         </div>
       ) : (
         <ul className="mt-6">
-          {articulos.map(a => {
-            const portada = portadaDe(a)
+          {articulos.map((a, i) => {
+            // Solo la portada elegida: las demas imagenes ya salen dentro del texto.
+            const portada = a.web_cover_url && urlImagenPermitida(a.web_cover_url) ? a.web_cover_url : null
             return (
-              <li key={a.id} className="border-b border-[#1a1a1a]/20 last:border-b-0">
-                <Link href={`/noticias/${a.id}`} className="group block py-7">
+              <li key={a.id} className="border-b-[3px] border-double border-[#1a1a1a] pt-9 pb-5 first:pt-2 last:border-b-0">
+                <article>
                   <time dateTime={a.web_published_at} className="text-xs uppercase tracking-[0.18em] text-[#1a1a1a]/60">
                     {formatearFecha(a.web_published_at)}
                   </time>
-                  <h2 className="mt-2 font-[family-name:var(--font-playfair)] text-2xl font-bold leading-snug group-hover:text-[#8b1a1a] sm:text-3xl">
-                    {a.web_title}
+                  <h2 className="mt-2 font-[family-name:var(--font-playfair)] text-3xl font-bold leading-tight text-balance sm:text-4xl">
+                    {/* El titular lleva a la pagina propia de la noticia, util para compartirla. */}
+                    <Link href={`/noticias/${a.id}`} className="hover:text-[#8b1a1a]">
+                      {a.web_title}
+                    </Link>
                   </h2>
                   {portada && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={portada}
                       alt={`Imagen de la noticia: ${a.web_title}`}
-                      loading="lazy"
-                      className="mt-4 aspect-[16/9] w-full object-cover"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      className="mt-5 w-full object-cover"
                     />
                   )}
-                  <p className="mt-3 text-lg leading-relaxed text-[#1a1a1a]/75">{adelanto(a)}</p>
-                  <span className="mt-3 inline-block text-sm font-semibold uppercase tracking-[0.15em] group-hover:text-[#8b1a1a]">
-                    Leer más →
-                  </span>
-                </Link>
+                  {/* La noticia completa, sin tener que pulsar "Leer mas". */}
+                  <div className="mt-5">
+                    <CuerpoNoticia bloques={a.web_blocks} titular={a.web_title} subtitulo="h3" />
+                  </div>
+                </article>
               </li>
             )
           })}

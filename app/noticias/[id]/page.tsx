@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
-import { parrafos, urlImagenPermitida } from '@/lib/bloques'
-import { obtenerArticulo, formatearFecha, adelanto, bloquesVisibles, altImagen, portadaDe } from '@/lib/ediciones'
+import CuerpoNoticia from '@/components/noticias/CuerpoNoticia'
+import { urlImagenPermitida } from '@/lib/bloques'
+import { obtenerArticulo, formatearFecha, adelanto, portadaDe } from '@/lib/ediciones'
 import { NOMBRE_SITIO } from '@/lib/sitio'
 
 type Props = { params: Promise<{ id: string }> }
@@ -68,32 +69,7 @@ export default async function ArticuloPage({ params }: Props) {
         )}
 
         <div className="mt-6 border-t border-[#1a1a1a]/20 pt-6">
-          {bloquesVisibles(articulo.web_blocks).map(b =>
-            b.tipo === 'imagen' ? (
-              <figure key={b.id} className="my-8">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={b.url} alt={altImagen(b, articulo.web_title)} loading="lazy" className="w-full" />
-                {b.pie && (
-                  <figcaption className="mt-2 border-l-2 border-[#1a1a1a]/30 pl-3 text-sm italic text-[#1a1a1a]/70">
-                    {b.pie}
-                  </figcaption>
-                )}
-              </figure>
-            ) : (
-              <section key={b.id} className="mb-2">
-                {b.subtitulo && (
-                  <h2 className="mt-8 mb-3 font-[family-name:var(--font-playfair)] text-2xl font-bold leading-snug sm:text-3xl">
-                    {b.subtitulo}
-                  </h2>
-                )}
-                {parrafos(b.texto).map((p, i) => (
-                  <p key={i} className="mb-5 text-lg leading-relaxed sm:text-xl">
-                    {p}
-                  </p>
-                ))}
-              </section>
-            )
-          )}
+          <CuerpoNoticia bloques={articulo.web_blocks} titular={articulo.web_title} />
         </div>
       </article>
 
