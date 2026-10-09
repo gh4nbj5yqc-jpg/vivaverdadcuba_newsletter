@@ -129,12 +129,20 @@ export default function Home() {
             )}
           </div>
 
-          <Link
-            href="/noticias"
-            className="mt-8 inline-block text-sm text-[#1a1a1a]/60 underline decoration-[#1a1a1a]/25 underline-offset-4 hover:text-[#8b1a1a] hover:decoration-[#8b1a1a]"
-          >
-            Leer las noticias →
-          </Link>
+          <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3">
+            <Link
+              href="/noticias"
+              className="inline-block text-sm text-[#1a1a1a]/60 underline decoration-[#1a1a1a]/25 underline-offset-4 hover:text-[#8b1a1a] hover:decoration-[#8b1a1a]"
+            >
+              Leer las noticias →
+            </Link>
+            <Link
+              href="/chat"
+              className="inline-block text-sm text-[#1a1a1a]/60 underline decoration-[#1a1a1a]/25 underline-offset-4 hover:text-[#8b1a1a] hover:decoration-[#8b1a1a]"
+            >
+              Entrar al chat →
+            </Link>
+          </div>
 
           <RedesSociales className="mt-6" />
         </section>

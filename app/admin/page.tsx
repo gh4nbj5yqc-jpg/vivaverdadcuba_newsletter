@@ -5,15 +5,17 @@ import { EVENTO_SESION_EXPIRADA } from '@/lib/admin-cliente'
 import EditorNoticia from '@/components/admin/EditorNoticia'
 import Historial from '@/components/admin/Historial'
 import Suscriptores from '@/components/admin/Suscriptores'
+import ChatAdmin from '@/components/admin/ChatAdmin'
 import { avisoError, botonPeligro, botonPrimario, campo, etiqueta, titular } from '@/components/admin/estilos'
 
-type Pestana = 'noticia' | 'suscriptores' | 'historial'
+type Pestana = 'noticia' | 'suscriptores' | 'historial' | 'chat'
 
 // "Noticia" es el editor unico: lo que se escribe ahi sirve para la web y para el correo.
 const PESTANAS: { id: Pestana; nombre: string }[] = [
   { id: 'noticia', nombre: 'Noticia' },
   { id: 'suscriptores', nombre: 'Suscriptores' },
   { id: 'historial', nombre: 'Historial' },
+  { id: 'chat', nombre: 'Chat' },
 ]
 
 export default function AdminPage() {
@@ -114,7 +116,7 @@ export default function AdminPage() {
           <h1 className="mt-2 text-xs uppercase tracking-[0.25em] text-[#1a1a1a]/60">Panel de administración</h1>
         </header>
 
-        <nav className="sticky top-[env(safe-area-inset-top,0px)] z-10 -mx-4 grid grid-cols-3 border-b border-[#1a1a1a]/30 bg-[#fbf8f1] px-4 sm:-mx-8 sm:px-8">
+        <nav className="sticky top-[env(safe-area-inset-top,0px)] z-10 -mx-4 grid grid-cols-4 border-b border-[#1a1a1a]/30 bg-[#fbf8f1] px-4 sm:-mx-8 sm:px-8">
           {PESTANAS.map(p => (
             <button key={p.id} type="button" onClick={() => setPestana(p.id)} aria-current={pestana === p.id ? 'page' : undefined}
               className={`min-h-12 border-b-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] sm:text-sm ${pestana === p.id ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent text-[#1a1a1a]/50'}`}>
@@ -149,6 +151,7 @@ export default function AdminPage() {
         <div className="mt-6">
           {pestana === 'suscriptores' && <Suscriptores />}
           {pestana === 'historial' && <Historial onAbrir={abrirNoticia} onEliminada={noticiaEliminada} />}
+          {pestana === 'chat' && <ChatAdmin />}
         </div>
       </div>
     </main>
