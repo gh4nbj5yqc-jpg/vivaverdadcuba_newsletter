@@ -5,7 +5,7 @@ import { bloquesVisibles, altImagen } from '@/lib/ediciones'
 // Lo comparten la lista /noticias y la pagina de cada noticia, para que
 // se vean igual en los dos sitios.
 // "subtitulo" indica el nivel del encabezado: h2 en la pagina de una noticia
-// (el titular es h1) y h3 en la lista (alli el titular es h2).
+// (el titular es h1) y h4 en la lista (alli el titular es h3).
 export default function CuerpoNoticia({
   bloques,
   titular,
@@ -13,7 +13,7 @@ export default function CuerpoNoticia({
 }: {
   bloques: Bloque[]
   titular: string
-  subtitulo?: 'h2' | 'h3'
+  subtitulo?: 'h2' | 'h3' | 'h4'
 }) {
   return (
     <>

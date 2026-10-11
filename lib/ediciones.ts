@@ -53,6 +53,23 @@ export function formatearFecha(iso: string) {
   })
 }
 
+// El dia (año-mes-dia) en que se publico, en hora de Cuba. Sirve para agrupar las noticias por dia.
+export function diaDe(iso: string) {
+  return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Havana' })
+}
+
+// Cuanto hace que se publico, en palabras: "Hoy", "Ayer", "Hace 3 días", "Hace 2 semanas"...
+export function haceCuanto(iso: string, ahora = new Date()) {
+  const aDias = (dia: string) => Date.UTC(Number(dia.slice(0, 4)), Number(dia.slice(5, 7)) - 1, Number(dia.slice(8, 10))) / 86_400_000
+  const dias = Math.round(aDias(diaDe(ahora.toISOString())) - aDias(diaDe(iso)))
+  if (dias <= 0) return 'Hoy'
+  if (dias === 1) return 'Ayer'
+  if (dias < 7) return `Hace ${dias} días`
+  if (dias < 30) return dias < 14 ? 'Hace 1 semana' : `Hace ${Math.floor(dias / 7)} semanas`
+  if (dias < 365) return dias < 60 ? 'Hace 1 mes' : `Hace ${Math.floor(dias / 30)} meses`
+  return dias < 730 ? 'Hace 1 año' : `Hace ${Math.floor(dias / 365)} años`
+}
+
 export function portadaDe(a: ArticuloPublico): string | null {
   if (a.web_cover_url && urlImagenPermitida(a.web_cover_url)) return a.web_cover_url
   const primera = bloquesVisibles(a.web_blocks).find((b): b is BloqueImagen => b.tipo === 'imagen')

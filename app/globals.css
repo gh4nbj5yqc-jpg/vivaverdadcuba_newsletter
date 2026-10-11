@@ -130,7 +130,7 @@ body {
       0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
-  /* Tarjeta blanca de esquinas amplias, como las de Apple News. */
+  /* Tarjeta de esquinas amplias, como las de Apple News: blanca de dia, gris oscuro de noche. */
   .tarjeta {
     background: var(--superficie);
     border-radius: 1.75rem;
