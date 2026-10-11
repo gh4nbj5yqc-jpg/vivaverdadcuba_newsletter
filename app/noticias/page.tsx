@@ -29,49 +29,49 @@ export default async function NoticiasPage() {
   const articulos = await listarArticulos()
 
   return (
-    <main className="border-t border-[#1a1a1a]/20 pt-8 pb-12">
-      <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold sm:text-4xl">
-        Todas las noticias
-      </h1>
+    <main className="pt-7 pb-10">
+      <h1 className="text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">Todas las noticias</h1>
 
       {articulos.length === 0 ? (
-        <div className="mt-8 border-l-4 border-[#1a1a1a]/30 bg-white/60 px-5 py-6">
+        <div className="tarjeta mt-4 px-5 py-6 sm:px-8">
           <p className="text-lg leading-relaxed">
-            Todavía no hemos publicado ninguna noticia. ¡Muy pronto tendrás aquí las primeras!
+            Todavía no hemos publicado ninguna noticia. Muy pronto tendrás aquí las primeras.
           </p>
-          <Link href="/" className="mt-4 inline-block font-semibold underline underline-offset-4 hover:text-[#8b1a1a]">
-            Suscríbete para recibirlas en tu correo →
+          <Link href="/" className="boton-acento mt-5">
+            Suscribirme para recibirlas
           </Link>
         </div>
       ) : (
-        <ul className="mt-6">
+        <ul className="mt-4 space-y-5">
           {articulos.map((a, i) => {
             // Solo la portada elegida: las demas imagenes ya salen dentro del texto.
             const portada = a.web_cover_url && urlImagenPermitida(a.web_cover_url) ? a.web_cover_url : null
             return (
-              <li key={a.id} className="border-b-[3px] border-double border-[#1a1a1a] pt-9 pb-5 first:pt-2 last:border-b-0">
-                <article>
-                  <time dateTime={a.web_published_at} className="text-xs uppercase tracking-[0.18em] text-[#1a1a1a]/60">
-                    {formatearFecha(a.web_published_at)}
-                  </time>
-                  <h2 className="mt-2 font-[family-name:var(--font-playfair)] text-3xl font-bold leading-tight text-balance sm:text-4xl">
-                    {/* El titular lleva a la pagina propia de la noticia, util para compartirla. */}
-                    <Link href={`/noticias/${a.id}`} className="hover:text-[#8b1a1a]">
-                      {a.web_title}
-                    </Link>
-                  </h2>
+              <li key={a.id}>
+                <article className="tarjeta overflow-hidden">
                   {portada && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={portada}
                       alt={`Imagen de la noticia: ${a.web_title}`}
                       loading={i === 0 ? 'eager' : 'lazy'}
-                      className="mt-5 w-full object-cover"
+                      className="w-full object-cover"
                     />
                   )}
-                  {/* La noticia completa, sin tener que pulsar "Leer mas". */}
-                  <div className="mt-5">
-                    <CuerpoNoticia bloques={a.web_blocks} titular={a.web_title} subtitulo="h3" />
+                  <div className="px-5 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-5">
+                    <time dateTime={a.web_published_at} className="text-[0.9375rem] font-semibold text-tinta-2">
+                      {formatearFecha(a.web_published_at)}
+                    </time>
+                    <h2 className="mt-1.5 text-[1.75rem] font-extrabold leading-[1.1] tracking-[-0.025em] text-balance sm:text-4xl">
+                      {/* El titular lleva a la pagina propia de la noticia, util para compartirla. */}
+                      <Link href={`/noticias/${a.id}`} className="rounded-lg hover:text-acento-tinta">
+                        {a.web_title}
+                      </Link>
+                    </h2>
+                    {/* La noticia completa, sin tener que pulsar "Leer mas". */}
+                    <div className="mt-5">
+                      <CuerpoNoticia bloques={a.web_blocks} titular={a.web_title} subtitulo="h3" />
+                    </div>
                   </div>
                 </article>
               </li>

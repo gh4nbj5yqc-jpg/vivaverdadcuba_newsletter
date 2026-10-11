@@ -1,12 +1,6 @@
 import MarcoDiario from '@/components/MarcoDiario'
-import ChatFlotante from '@/components/chat/ChatFlotante'
 
+// El boton del chat que acompaña a las noticias lo pone la barra de abajo (components/Navegacion.tsx).
 export default function NoticiasLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <MarcoDiario>
-      {children}
-      {/* El globo del chat acompaña a todas las paginas de noticias. */}
-      <ChatFlotante />
-    </MarcoDiario>
-  )
+  return <MarcoDiario>{children}</MarcoDiario>
 }

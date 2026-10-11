@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { correoDeSuscriptor, enmascarar, leerEnlace } from '@/lib/baja'
 import { NOMBRE_SITIO } from '@/lib/sitio'
+import MarcoDiario from '@/components/MarcoDiario'
 import BotonBaja from './BotonBaja'
 
 export const metadata: Metadata = {
@@ -26,8 +26,8 @@ export default async function BajaPage({ searchParams }: Props) {
   if (enlace.tipo === 'invalido') {
     contenido = (
       <>
-        <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold sm:text-4xl">Enlace no válido</h1>
-        <p className="mt-4 text-lg leading-relaxed text-[#1a1a1a]/75">
+        <h1 className="text-[1.75rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-4xl">Enlace no válido</h1>
+        <p className="mt-3 text-[1.0625rem] leading-relaxed text-tinta-2">
           Este enlace de baja está incompleto o no es correcto. Usa el enlace «Darme de baja» que aparece al final de
           cualquiera de nuestros correos.
         </p>
@@ -47,20 +47,20 @@ export default async function BajaPage({ searchParams }: Props) {
     contenido =
       correo === null ? (
         <>
-          <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold sm:text-4xl">Ya no estás suscrito</h1>
-          <p className="mt-4 text-lg leading-relaxed text-[#1a1a1a]/75">
+          <h1 className="text-[1.75rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-4xl">Ya no estás suscrito</h1>
+          <p className="mt-3 text-[1.0625rem] leading-relaxed text-tinta-2">
             Este correo ya no está en nuestra lista. No recibirás más envíos.
           </p>
         </>
       ) : (
         <>
-          <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold sm:text-4xl">¿Darte de baja?</h1>
+          <h1 className="text-[1.75rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-4xl">¿Darte de baja?</h1>
           {enlace.tipo === 'prueba' && (
-            <p className="mx-auto mt-4 max-w-md border-l-4 border-[#b7791f] bg-[#b7791f]/10 px-4 py-3 text-left text-sm text-[#6b4a10]">
+            <p className="mx-auto mt-4 max-w-md rounded-2xl bg-[#ff9f0a]/20 px-4 py-3 text-left text-[0.9375rem] leading-snug">
               Enlace de prueba (vista previa o correo de prueba): no da de baja a ningún suscriptor.
             </p>
           )}
-          <p className="mt-4 text-lg leading-relaxed text-[#1a1a1a]/75">
+          <p className="mt-3 text-[1.0625rem] leading-relaxed text-tinta-2">
             Dejarás de recibir los correos de {NOMBRE_SITIO} en
           </p>
           <p className="mt-2 break-all text-xl font-semibold">{correo}</p>
@@ -70,23 +70,10 @@ export default async function BajaPage({ searchParams }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbf8f1] font-[family-name:var(--font-source-serif)] text-[#1a1a1a]">
-      <div className="mx-auto max-w-2xl px-5 sm:px-8">
-        <header className="pt-8 pb-5 text-center sm:pt-10">
-          <Link href="/" className="font-[family-name:var(--font-playfair)] text-3xl font-black leading-none tracking-tight sm:text-5xl">
-            {NOMBRE_SITIO}
-          </Link>
-          <div className="mt-5 border-t-[3px] border-b border-[#1a1a1a] pt-[3px]" />
-        </header>
-
-        <section className="border-t border-[#1a1a1a]/20 pt-10 pb-14 text-center">{contenido}</section>
-
-        <footer className="border-t border-[#1a1a1a]/20 py-6 text-center text-sm">
-          <Link href="/noticias" className="underline underline-offset-4 hover:text-[#8b1a1a]">
-            Leer las noticias
-          </Link>
-        </footer>
-      </div>
-    </main>
+    <MarcoDiario>
+      <main className="pt-7 pb-10">
+        <section className="tarjeta px-5 py-10 text-center sm:px-8">{contenido}</section>
+      </main>
+    </MarcoDiario>
   )
 }

@@ -180,34 +180,34 @@ export default function Chat({ variante, activo = true }: Props) {
       className={
         flotante
           ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3'
-          : 'mt-6 h-[55vh] min-h-72 overflow-y-auto overscroll-contain rounded-2xl bg-white/50 px-4 py-4 ring-1 ring-[#1a1a1a]/10 sm:px-5'
+          : 'tarjeta mt-5 h-[max(16rem,calc(100dvh-33rem))] overflow-y-auto overscroll-contain px-4 py-4 sm:px-5'
       }
     >
       {mensajes === null ? (
-        <p className="py-6 text-center text-sm text-[#1a1a1a]/55">
+        <p className="py-6 text-center text-[0.9375rem] text-tinta-2">
           {errorCarga ? 'No se pudo cargar el chat. Reintentando…' : 'Cargando el chat…'}
         </p>
       ) : visibles.length === 0 ? (
-        <p className="py-6 text-center text-sm text-[#1a1a1a]/55">Todavía no hay mensajes. Escribe el primero.</p>
+        <p className="py-6 text-center text-[0.9375rem] text-tinta-2">Todavía no hay mensajes. Escribe el primero.</p>
       ) : (
         <ul className="space-y-3">
           {visibles.map(m => {
             const mio = mios.has(m.id)
             return (
-              // Los mensajes propios van a la derecha, en oscuro; los de los demas, a la izquierda.
+              // Los mensajes propios van a la derecha, en color; los de los demas, a la izquierda, en gris.
               <li key={m.id} className={`flex items-end gap-2 ${mio ? 'flex-row-reverse' : ''}`}>
                 <Bolita color={m.color} className="mb-5" />
                 <div className={`flex min-w-0 max-w-[82%] flex-col ${mio ? 'items-end' : 'items-start'}`}>
                   <p
-                    className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 leading-snug [overflow-wrap:anywhere] ${flotante ? 'text-[0.95rem]' : 'text-base sm:text-lg'} ${
+                    className={`whitespace-pre-wrap break-words rounded-[1.25rem] px-3.5 py-2 leading-snug [overflow-wrap:anywhere] ${flotante ? 'text-base' : 'text-[1.0625rem]'} ${
                       mio
-                        ? 'rounded-br-md bg-[#1a1a1a] text-[#fbf8f1]'
-                        : 'rounded-bl-md bg-white text-[#1a1a1a] ring-1 ring-[#1a1a1a]/10'
+                        ? 'rounded-br-md bg-acento text-white'
+                        : 'rounded-bl-md bg-relleno text-tinta'
                     }`}
                   >
                     {m.texto}
                   </p>
-                  <p className="mt-1 px-1 text-[0.7rem] text-[#1a1a1a]/45">
+                  <p className="mt-1 px-1 text-xs text-tinta-2">
                     {mio ? 'Tú, ' : ''}
                     {hora(m.created_at)}
                   </p>
@@ -228,10 +228,10 @@ export default function Chat({ variante, activo = true }: Props) {
         enviar()
       }}
     >
-      {mensajes !== null && errorCarga && <p className="mb-2 px-1 text-sm text-[#8b1a1a]">Se perdió la conexión. Reintentando…</p>}
+      {mensajes !== null && errorCarga && <p className="mb-2 px-1 text-sm text-acento-tinta">Se perdió la conexión. Reintentando…</p>}
       <label htmlFor={idCampo} className="sr-only">Tu mensaje</label>
       {/* Caja de escribir: el campo y el boton redondo de enviar van dentro del mismo recuadro. */}
-      <div className="flex items-end gap-2 rounded-3xl bg-white py-1.5 pr-1.5 pl-4 ring-1 ring-[#1a1a1a]/15 transition focus-within:ring-2 focus-within:ring-[#1a1a1a]">
+      <div className="flex items-end gap-2 rounded-[1.625rem] bg-superficie py-1.5 pr-1.5 pl-4 shadow-[inset_0_0_0_1px_var(--linea)] transition focus-within:shadow-[inset_0_0_0_2px_var(--acento)]">
         <textarea
           id={idCampo}
           rows={2}
@@ -247,36 +247,36 @@ export default function Chat({ variante, activo = true }: Props) {
               enviar()
             }
           }}
-          className="block min-w-0 flex-1 resize-none bg-transparent py-1.5 text-base leading-snug text-[#1a1a1a] placeholder:text-[#1a1a1a]/40 focus:outline-none"
+          className="block min-w-0 flex-1 resize-none bg-transparent py-1.5 text-base leading-snug text-tinta placeholder:text-tinta-3 focus:outline-none"
         />
         <button
           type="submit"
           aria-label={enviando ? 'Enviando' : 'Enviar mensaje'}
           disabled={enviando || pasado || topeSeguidos || !texto.trim()}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1a1a1a] text-[#fbf8f1] transition hover:bg-[#8b1a1a] disabled:cursor-not-allowed disabled:bg-[#1a1a1a]/25"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-acento text-white transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:bg-relleno disabled:text-tinta-3"
         >
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" />
           </svg>
         </button>
       </div>
-      <div className="mt-2 flex items-center justify-between gap-3 px-1 text-xs text-[#1a1a1a]/60">
+      <div className="mt-2 flex items-center justify-between gap-3 px-1 text-[0.8125rem] text-tinta-2">
         <p className="flex items-center gap-1.5">
           {enNavegador && <Bolita color={miColor} className="!h-3 !w-3" />}
           Tu color en este chat
         </p>
-        <p id={`${idCampo}-ayuda`} className={pasado ? 'font-semibold text-[#8b1a1a]' : ''}>
+        <p id={`${idCampo}-ayuda`} className={pasado ? 'font-semibold text-acento-tinta' : ''}>
           {palabras} de {MAX_PALABRAS} palabras
         </p>
       </div>
       <div aria-live="polite" className="text-sm">
         {topeSeguidos && (
-          <p className="mt-2 rounded-xl bg-[#b7791f]/12 px-3 py-2 text-[#6b4a10]">
+          <p className="mt-2 rounded-2xl bg-[#ff9f0a]/20 px-3.5 py-2.5 leading-snug">
             Ya escribiste {MAX_SEGUIDOS} mensajes seguidos. Cuando alguien más escriba podrás seguir.
           </p>
         )}
         {error && (
-          <p role="alert" className="mt-2 rounded-xl bg-[#8b1a1a]/10 px-3 py-2 text-[#6b1414]">
+          <p role="alert" className="mt-2 rounded-2xl bg-acento/15 px-3.5 py-2.5 leading-snug">
             {error}
           </p>
         )}
@@ -294,9 +294,9 @@ export default function Chat({ variante, activo = true }: Props) {
   }
 
   return (
-    <main className="border-t border-[#1a1a1a]/20 pt-8 pb-12">
-      <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold sm:text-4xl">Chat</h1>
-      <p className="mt-3 leading-relaxed text-[#1a1a1a]/75">
+    <main className="pt-7 pb-10">
+      <h1 className="text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">Chat</h1>
+      <p className="mt-2 text-[1.0625rem] leading-relaxed text-tinta-2">
         Un espacio abierto para opinar. No pedimos ni guardamos tu nombre ni tu correo: te distingue una bolita de color,
         que es tuya mientras sigas en la web. Los mensajes se borran a los {DIAS_CHAT} días.
       </p>

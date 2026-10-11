@@ -50,46 +50,44 @@ export default async function ArticuloPage({ params }: Props) {
   const portada = articulo.web_cover_url && urlImagenPermitida(articulo.web_cover_url) ? articulo.web_cover_url : null
 
   return (
-    <main className="border-t border-[#1a1a1a]/20 pt-6 pb-12">
-      <Link href="/noticias" className="text-sm uppercase tracking-[0.15em] text-[#1a1a1a]/60 hover:text-[#8b1a1a]">
-        ← Volver a las noticias
+    <main className="pt-5 pb-10">
+      {/* Boton de volver, de cristal: se queda arriba mientras se lee y deja ver la noticia por debajo. */}
+      <Link
+        href="/noticias"
+        aria-label="Volver a las noticias"
+        title="Volver a las noticias"
+        className="cristal sticky top-3 z-30 flex h-11 w-11 items-center justify-center rounded-full transition active:scale-95"
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m14.5 5-7 7 7 7" />
+        </svg>
       </Link>
 
-      <article className="mt-6">
-        <time dateTime={articulo.web_published_at} className="text-xs uppercase tracking-[0.18em] text-[#1a1a1a]/60">
-          {formatearFecha(articulo.web_published_at)}
-        </time>
-        <h1 className="mt-2 font-[family-name:var(--font-playfair)] text-3xl font-bold leading-tight text-balance sm:text-5xl">
-          {articulo.web_title}
-        </h1>
-
+      <article className="tarjeta mt-4 overflow-hidden">
         {portada && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={portada} alt={`Imagen de la noticia: ${articulo.web_title}`} className="mt-6 w-full object-cover" />
+          <img src={portada} alt={`Imagen de la noticia: ${articulo.web_title}`} className="w-full object-cover" />
         )}
-
-        <div className="mt-6 border-t border-[#1a1a1a]/20 pt-6">
-          <CuerpoNoticia bloques={articulo.web_blocks} titular={articulo.web_title} />
+        <div className="px-5 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-5">
+          <time dateTime={articulo.web_published_at} className="text-[0.9375rem] font-semibold text-tinta-2">
+            {formatearFecha(articulo.web_published_at)}
+          </time>
+          <h1 className="mt-1.5 text-[2rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-pretty sm:text-5xl">
+            {articulo.web_title}
+          </h1>
+          <div className="mt-6">
+            <CuerpoNoticia bloques={articulo.web_blocks} titular={articulo.web_title} />
+          </div>
         </div>
       </article>
 
-      <aside className="mt-10 border-y-[3px] border-double border-[#1a1a1a] px-1 py-6 text-center">
-        <p className="font-[family-name:var(--font-playfair)] text-2xl font-bold">¿Te gustó esta noticia?</p>
-        <p className="mt-2 text-[#1a1a1a]/75">Recibe las próximas directo en tu correo.</p>
-        <Link
-          href="/"
-          className="mt-5 inline-flex min-h-12 items-center bg-[#1a1a1a] px-6 text-sm font-semibold uppercase tracking-[0.15em] text-[#fbf8f1] transition hover:bg-[#8b1a1a]"
-        >
+      <aside className="tarjeta mt-5 px-5 py-7 text-center sm:px-8">
+        <p className="text-2xl font-extrabold tracking-[-0.02em]">¿Te gustó esta noticia?</p>
+        <p className="mt-1.5 text-[1.0625rem] text-tinta-2">Recibe las próximas directo en tu correo.</p>
+        <Link href="/" className="boton-acento mt-5">
           Suscribirme
         </Link>
       </aside>
-
-      <Link
-        href="/noticias"
-        className="mt-8 inline-block text-sm uppercase tracking-[0.15em] text-[#1a1a1a]/60 hover:text-[#8b1a1a]"
-      >
-        ← Volver a las noticias
-      </Link>
     </main>
   )
 }

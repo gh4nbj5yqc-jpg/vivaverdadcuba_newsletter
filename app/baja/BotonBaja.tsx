@@ -31,7 +31,7 @@ export default function BotonBaja({ s, t, prueba }: Props) {
 
   if (estado === 'hecho') {
     return (
-      <p role="status" className="mt-8 border-l-4 border-[#2f6b3a] bg-[#2f6b3a]/10 px-4 py-4 text-left text-[#1f4a27]">
+      <p role="status" className="mt-7 rounded-2xl bg-[#34c759]/20 px-4 py-3.5 text-left leading-snug">
         {prueba ? (
           <><strong>Esto es una prueba.</strong> Así se verá el mensaje, pero no se ha dado de baja a nadie.</>
         ) : (
@@ -42,17 +42,17 @@ export default function BotonBaja({ s, t, prueba }: Props) {
   }
 
   return (
-    <div className="mt-8">
+    <div className="mt-7">
       <button
         type="button"
         onClick={confirmar}
         disabled={estado === 'enviando'}
-        className="min-h-12 w-full bg-[#1a1a1a] px-6 text-sm font-semibold uppercase tracking-[0.15em] text-[#fbf8f1] transition hover:bg-[#8b1a1a] disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+        className="boton-acento w-full sm:w-auto"
       >
         {estado === 'enviando' ? 'Procesando…' : 'Confirmar baja'}
       </button>
       {estado === 'error' && (
-        <p role="alert" className="mt-4 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-3 text-left text-[#6b1414]">
+        <p role="alert" className="mt-4 rounded-2xl bg-acento/15 px-4 py-3 text-left leading-snug">
           {error}
         </p>
       )}

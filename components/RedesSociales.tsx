@@ -60,7 +60,7 @@ function Icono({ red, degradado }: { red: Red; degradado: string }) {
   }
 
   return (
-    <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" className="rounded-[10px] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)]">
       <rect width="24" height="24" rx="6" fill="#000000" />
       <path fill="#ffffff" transform="translate(5.5 5.5) scale(0.5417)" d={TRAZOS[red]} />
     </svg>

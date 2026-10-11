@@ -1,31 +1,193 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------
+   Colores y tipografia de la web publica (estilo Apple News + cristal).
+   El panel de admin y el correo conservan su propio estilo de diario.
+   Cada color tiene su version clara y oscura: el telefono elige sola.
+   ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  color-scheme: light dark;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --fondo: #f2f2f7;
+  --superficie: #ffffff;
+  --tinta: #000000;
+  --tinta-2: rgba(60, 60, 67, 0.74);
+  --tinta-3: rgba(60, 60, 67, 0.42);
+  --linea: rgba(60, 60, 67, 0.14);
+  --relleno: rgba(118, 118, 128, 0.12);
+  --acento: #e0193a;
+  --acento-tinta: #d1102f;
+
+  --cristal: rgba(255, 255, 255, 0.58);
+  --cristal-barra: rgba(255, 255, 255, 0.38);
+  --cristal-denso: rgba(250, 250, 252, 0.8);
+  --cristal-borde: rgba(255, 255, 255, 0.55);
+  --cristal-brillo: rgba(255, 255, 255, 0.9);
+  --cristal-sombra: 0 12px 34px -10px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  --fuente-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), system-ui, "Segoe UI", Roboto, sans-serif;
+  --fuente-serif: ui-serif, "New York", "Iowan Old Style", Charter, Georgia, "Noto Serif", serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --fondo: #000000;
+    --superficie: #1c1c1e;
+    --tinta: #ffffff;
+    --tinta-2: rgba(235, 235, 245, 0.7);
+    --tinta-3: rgba(235, 235, 245, 0.38);
+    --linea: rgba(120, 120, 128, 0.36);
+    --relleno: rgba(118, 118, 128, 0.26);
+    --acento: #e0193a;
+    --acento-tinta: #ff5c77;
+
+    --cristal: rgba(58, 58, 64, 0.52);
+    --cristal-barra: rgba(58, 58, 64, 0.34);
+    --cristal-denso: rgba(34, 34, 38, 0.8);
+    --cristal-borde: rgba(255, 255, 255, 0.1);
+    --cristal-brillo: rgba(255, 255, 255, 0.34);
+    --cristal-sombra: 0 14px 36px -10px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-tinta-3: var(--tinta-3);
+  --color-linea: var(--linea);
+  --color-relleno: var(--relleno);
+  --color-acento: var(--acento);
+  --color-acento-tinta: var(--acento-tinta);
+  --font-sans: var(--fuente-sans);
+  --font-serif: var(--fuente-serif);
 }
 
-/* El chat flotante aparece con un movimiento corto desde el globo. */
+body {
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: var(--fuente-sans);
+}
+
+@layer components {
+  /* Cristal liquido: deja ver, desenfocado, lo que pasa por debajo, con un borde que atrapa la luz. */
+  .cristal,
+  .cristal-denso {
+    position: relative;
+    background: var(--cristal);
+    border: 1px solid var(--cristal-borde);
+    box-shadow:
+      inset 0 0 14px rgba(255, 255, 255, 0.1),
+      var(--cristal-sombra);
+    -webkit-backdrop-filter: blur(22px) saturate(190%);
+    backdrop-filter: blur(22px) saturate(190%);
+  }
+
+  /* La barra de abajo y el boton del chat: un cristal mas transparente, que deja ver mas la pagina. */
+  .cristal-barra {
+    background: var(--cristal-barra);
+  }
+
+  /* Para superficies con mucho texto encima (la ventana del chat): mas opaco, mas legible. */
+  .cristal-denso {
+    background: var(--cristal-denso);
+    -webkit-backdrop-filter: blur(34px) saturate(180%);
+    backdrop-filter: blur(34px) saturate(180%);
+  }
+
+  /* El reflejo del borde: brilla arriba a la izquierda y abajo a la derecha, como un vidrio grueso. */
+  .cristal::before,
+  .cristal-denso::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      145deg,
+      var(--cristal-brillo) 0%,
+      transparent 32%,
+      transparent 62%,
+      color-mix(in srgb, var(--cristal-brillo) 60%, transparent) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  /* La burbuja de la seccion elegida en la barra de abajo: una gota de cristal mas clara. */
+  .burbuja-barra {
+    background: var(--relleno);
+    box-shadow:
+      inset 0 1px 0 var(--cristal-brillo),
+      inset 0 0 10px rgba(255, 255, 255, 0.14),
+      0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Tarjeta blanca de esquinas amplias, como las de Apple News. */
+  .tarjeta {
+    background: var(--superficie);
+    border-radius: 1.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Boton principal, en forma de capsula. */
+  .boton-acento {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: var(--acento);
+    padding-inline: 1.5rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: #ffffff;
+    transition: filter 0.15s, transform 0.15s;
+  }
+  .boton-acento:hover {
+    filter: brightness(1.08);
+  }
+  .boton-acento:active {
+    transform: scale(0.97);
+  }
+  .boton-acento:disabled {
+    cursor: wait;
+    opacity: 0.55;
+  }
+}
+
+/* Contorno al moverse con el teclado. */
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--acento-tinta);
+  outline-offset: 2px;
+}
+
+/* Quien pide menos transparencia (o un navegador sin desenfoque) ve superficies solidas. */
+@media (prefers-reduced-transparency: reduce) {
+  .cristal,
+  .cristal-barra,
+  .cristal-denso {
+    background: var(--superficie);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cristal,
+  .cristal-barra,
+  .cristal-denso {
+    background: var(--superficie);
+  }
+}
+
+/* El chat flotante aparece con un movimiento corto desde su boton. */
 @keyframes chat-abrir {
   from {
     opacity: 0;

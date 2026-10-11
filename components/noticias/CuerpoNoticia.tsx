@@ -19,24 +19,21 @@ export default function CuerpoNoticia({
     <>
       {bloquesVisibles(bloques).map(b =>
         b.tipo === 'imagen' ? (
-          <figure key={b.id} className="my-8">
+          <figure key={b.id} className="my-7">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={b.url} alt={altImagen(b, titular)} loading="lazy" className="w-full" />
-            {b.pie && (
-              <figcaption className="mt-2 border-l-2 border-[#1a1a1a]/30 pl-3 text-sm italic text-[#1a1a1a]/70">
-                {b.pie}
-              </figcaption>
-            )}
+            <img src={b.url} alt={altImagen(b, titular)} loading="lazy" className="w-full rounded-2xl" />
+            {b.pie && <figcaption className="mt-2 px-1 text-sm leading-snug text-tinta-2">{b.pie}</figcaption>}
           </figure>
         ) : (
-          <section key={b.id} className="mb-2">
+          <section key={b.id}>
             {b.subtitulo && (
-              <Subtitulo className="mt-8 mb-3 font-[family-name:var(--font-playfair)] text-2xl font-bold leading-snug sm:text-3xl">
+              <Subtitulo className="mt-8 mb-3 text-2xl font-bold leading-tight tracking-[-0.02em] sm:text-[1.75rem]">
                 {b.subtitulo}
               </Subtitulo>
             )}
+            {/* El texto de lectura va en letra con serifa, como los articulos de Apple News. */}
             {parrafos(b.texto).map((p, i) => (
-              <p key={i} className="mb-5 text-lg leading-relaxed sm:text-xl">
+              <p key={i} className="mb-5 font-serif text-[1.1875rem] leading-[1.6] sm:text-xl sm:leading-[1.6]">
                 {p}
               </p>
             ))}
