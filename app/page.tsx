@@ -17,6 +17,7 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('');
   const [conUltimoCorreo, setConUltimoCorreo] = useState(false);
+  const [yaSuscrito, setYaSuscrito] = useState(false);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +33,7 @@ export default function Home() {
       if (res.ok) {
         const datos = await res.json().catch(() => null);
         setConUltimoCorreo(Boolean(datos?.ultimoCorreo));
+        setYaSuscrito(Boolean(datos?.yaSuscrito));
         setStatus('success');
         setEmail('');
       } else {
@@ -80,7 +82,15 @@ export default function Home() {
             </form>
 
             <div aria-live="polite">
-              {status === 'success' && (
+              {status === 'success' && yaSuscrito && (
+                <p role="status" className="mt-4 rounded-2xl bg-superficie px-4 py-3.5 leading-snug">
+                  <strong>Ya estás suscrito.</strong> Este correo ya está en nuestra
+                  lista, así que no hace falta que hagas nada más. Si no te llegan
+                  nuestros correos, búscalos en Spam o Promociones y márcalos como
+                  «No es spam».
+                </p>
+              )}
+              {status === 'success' && !yaSuscrito && (
                 <p role="status" className="mt-4 rounded-2xl bg-superficie px-4 py-3.5 leading-snug">
                   <strong className="text-[#1d8a3a] dark:text-[#30d158]">¡Listo!</strong> Te has suscrito.{' '}
                   {conUltimoCorreo

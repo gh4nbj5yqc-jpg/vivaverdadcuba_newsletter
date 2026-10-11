@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------
-   Colores y tipografia de la web publica (estilo Apple News + cristal).
-   El panel de admin y el correo conservan su propio estilo de diario.
+   Colores y tipografia de toda la web, publica y panel de admin (estilo
+   Apple News + cristal). El correo conserva su propio estilo de diario.
    Cada color tiene su version clara y oscura: el telefono elige sola.
    ------------------------------------------------------------------ */
 :root {

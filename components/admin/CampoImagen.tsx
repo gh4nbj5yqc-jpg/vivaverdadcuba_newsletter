@@ -35,12 +35,12 @@ export default function CampoImagen({ url, onUrl, deshabilitado }: Props) {
     <div>
       {url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="mb-3 max-h-72 w-full border border-[#1a1a1a]/20 bg-white object-contain" />
+        <img src={url} alt="" className="mb-3 max-h-72 w-full rounded-2xl bg-relleno object-contain" />
       )}
       <div className="flex flex-wrap items-center gap-2">
         <label
           htmlFor={idInput}
-          className={`${botonSecundario} inline-flex cursor-pointer items-center ${subiendo || deshabilitado ? 'pointer-events-none opacity-50' : ''}`}
+          className={`${botonSecundario} cursor-pointer ${subiendo || deshabilitado ? 'pointer-events-none opacity-50' : ''}`}
         >
           {subiendo ? 'Subiendo…' : url ? 'Cambiar imagen' : 'Elegir imagen'}
         </label>
@@ -53,12 +53,12 @@ export default function CampoImagen({ url, onUrl, deshabilitado }: Props) {
           className="sr-only"
         />
         {url && !subiendo && !deshabilitado && (
-          <button type="button" onClick={() => onUrl('')} className="min-h-11 px-2 text-sm text-[#8b1a1a] underline">
+          <button type="button" onClick={() => onUrl('')} className="min-h-11 rounded-full px-2 text-[0.9375rem] font-semibold text-acento-tinta">
             Quitar imagen
           </button>
         )}
       </div>
-      {error && <p role="alert" className={`${avisoError} mt-3 text-sm`}>{error}</p>}
+      {error && <p role="alert" className={`${avisoError} mt-3`}>{error}</p>}
     </div>
   )
 }

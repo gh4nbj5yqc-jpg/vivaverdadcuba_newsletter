@@ -6,7 +6,7 @@ import EditorNoticia from '@/components/admin/EditorNoticia'
 import Historial from '@/components/admin/Historial'
 import Suscriptores from '@/components/admin/Suscriptores'
 import ChatAdmin from '@/components/admin/ChatAdmin'
-import { avisoError, botonPeligro, botonPrimario, campo, etiqueta, titular } from '@/components/admin/estilos'
+import { avisoError, botonConfirmar, botonDiscreto, botonPrimario, botonSecundario, campo, etiqueta } from '@/components/admin/estilos'
 
 type Pestana = 'noticia' | 'suscriptores' | 'historial' | 'chat'
 
@@ -90,17 +90,20 @@ export default function AdminPage() {
 
   if (!autenticado) {
     return (
-      <main className="min-h-screen bg-[#fbf8f1] px-5 font-[family-name:var(--font-source-serif)] text-[#1a1a1a]">
-        <form onSubmit={verificarPassword} className="mx-auto flex min-h-screen max-w-sm flex-col justify-center py-10">
-          <p className={`${titular} text-center text-3xl font-black`}>Viva Verdad Cuba</p>
-          <div className="mt-4 border-t-[3px] border-b border-[#1a1a1a] pt-[3px]" />
-          <h1 className="mt-6 mb-6 text-center text-xs uppercase tracking-[0.25em] text-[#1a1a1a]/60">Panel de administración</h1>
-          <label className={etiqueta} htmlFor="password">Contraseña</label>
-          <input id="password" type="password" autoComplete="current-password" value={password}
-            onChange={e => setPassword(e.target.value)} className={`${campo} mb-4`} required />
-          <button type="submit" disabled={entrando} className={botonPrimario}>{entrando ? 'Entrando…' : 'Entrar'}</button>
-          {errorLogin && <p role="alert" className={`${avisoError} mt-4`}>{errorLogin}</p>}
-        </form>
+      <main className="flex min-h-screen flex-col justify-center bg-fondo px-4 py-10 font-sans text-tinta">
+        <div className="mx-auto w-full max-w-sm">
+          <header className="px-1 text-[1.75rem] font-extrabold leading-[1.08] tracking-[-0.03em]">
+            <p>Viva Verdad Cuba</p>
+            <h1 className="text-tinta-3">Panel de administración</h1>
+          </header>
+          <form onSubmit={verificarPassword} className="tarjeta mt-6 flex flex-col p-5">
+            <label className={etiqueta} htmlFor="password">Contraseña</label>
+            <input id="password" type="password" autoComplete="current-password" value={password}
+              onChange={e => setPassword(e.target.value)} className={`${campo} mb-4`} required />
+            <button type="submit" disabled={entrando} className={botonPrimario}>{entrando ? 'Entrando…' : 'Entrar'}</button>
+            {errorLogin && <p role="alert" className={`${avisoError} mt-4`}>{errorLogin}</p>}
+          </form>
+        </div>
       </main>
     )
   }
@@ -108,36 +111,40 @@ export default function AdminPage() {
   const editando = pestana === 'noticia'
 
   return (
-    <main className="min-h-screen bg-[#fbf8f1] font-[family-name:var(--font-source-serif)] text-[#1a1a1a]">
-      <div className="mx-auto max-w-2xl px-4 pb-16 sm:px-8">
-        <header className="pt-6 pb-4 text-center">
-          <p className={`${titular} text-2xl font-black sm:text-4xl`}>Viva Verdad Cuba</p>
-          <div className="mt-3 border-t-[3px] border-b border-[#1a1a1a] pt-[3px]" />
-          <h1 className="mt-2 text-xs uppercase tracking-[0.25em] text-[#1a1a1a]/60">Panel de administración</h1>
+    <main className="min-h-screen bg-fondo font-sans text-tinta">
+      <div className="mx-auto max-w-2xl px-4 pb-20 sm:px-6">
+        <header className="pt-8 pb-5 text-[1.75rem] font-extrabold leading-[1.08] tracking-[-0.03em] sm:pt-10 sm:text-4xl">
+          <p>Viva Verdad Cuba</p>
+          <h1 className="text-tinta-3">Panel de administración</h1>
         </header>
 
-        <nav className="sticky top-[env(safe-area-inset-top,0px)] z-10 -mx-4 grid grid-cols-4 border-b border-[#1a1a1a]/30 bg-[#fbf8f1] px-4 sm:-mx-8 sm:px-8">
+        {/* Pestañas: un selector de cristal que se queda arriba, con una pastilla que se desliza. */}
+        <nav aria-label="Secciones del panel" className="cristal cristal-barra sticky top-[calc(0.5rem+env(safe-area-inset-top,0px))] z-10 grid grid-cols-4 rounded-full p-1">
+          <span
+            aria-hidden="true"
+            style={{ translate: `${PESTANAS.findIndex(p => p.id === pestana) * 100}% 0` }}
+            className="absolute top-1 bottom-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-superficie shadow-[0_1px_4px_rgba(0,0,0,0.14)] transition-[translate] duration-300 ease-[cubic-bezier(0.3,1.3,0.5,1)] motion-reduce:transition-none"
+          />
           {PESTANAS.map(p => (
             <button key={p.id} type="button" onClick={() => setPestana(p.id)} aria-current={pestana === p.id ? 'page' : undefined}
-              className={`min-h-12 border-b-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] sm:text-sm ${pestana === p.id ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent text-[#1a1a1a]/50'}`}>
+              className={`relative min-h-10 rounded-full px-1 text-[0.8125rem] font-semibold transition-colors sm:text-[0.9375rem] ${pestana === p.id ? 'text-tinta' : 'text-tinta-2'}`}>
               {p.nombre}
             </button>
           ))}
         </nav>
 
         {descartar && (
-          <div role="alertdialog" aria-label="Cambios sin guardar" className="mt-4 flex flex-wrap items-center gap-2 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-3">
-            <p className="mr-auto text-[#6b1414]">Tienes cambios sin guardar en la noticia abierta. ¿Descartarlos?</p>
-            <button type="button" className={botonPeligro} onClick={descartar}>Descartar cambios</button>
-            <button type="button" className="min-h-11 px-3 text-sm underline" onClick={() => setDescartar(null)}>Seguir editando</button>
+          <div role="alertdialog" aria-label="Cambios sin guardar" className={`${avisoError} mt-4 flex flex-wrap items-center gap-2`}>
+            <p className="mr-auto">Tienes cambios sin guardar en la noticia abierta. ¿Descartarlos?</p>
+            <button type="button" className={botonConfirmar} onClick={descartar}>Descartar cambios</button>
+            <button type="button" className={botonDiscreto} onClick={() => setDescartar(null)}>Seguir editando</button>
           </div>
         )}
 
         {editando && (
-          <div className="mt-4 mb-6 flex items-center justify-between gap-3 border-b border-[#1a1a1a]/15 pb-4">
-            <p className="text-sm text-[#1a1a1a]/70">{abierta.id ? 'Editando una noticia guardada' : 'Noticia nueva'}</p>
-            <button type="button" onClick={() => abrirNoticia(null)}
-              className="min-h-11 border border-[#1a1a1a]/40 px-4 text-sm font-semibold hover:border-[#1a1a1a]">
+          <div className="mt-5 mb-5 flex items-center justify-between gap-3">
+            <p className="text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">{abierta.id ? 'Editando noticia' : 'Noticia nueva'}</p>
+            <button type="button" onClick={() => abrirNoticia(null)} className={`${botonSecundario} shrink-0 whitespace-nowrap`}>
               + Nueva noticia
             </button>
           </div>

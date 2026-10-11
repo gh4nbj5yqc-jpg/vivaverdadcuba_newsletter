@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { pedirAdmin, pedirJson, SesionExpirada } from '@/lib/admin-cliente'
 import type { EstadoWeb } from '@/lib/noticias-admin'
 import type { ResultadoGuardar } from './EditorNoticia'
-import { avisoError, avisoOk, botonPrimario, botonSecundario, campo, etiqueta, titular as fuenteTitular } from './estilos'
+import { avisoAtencion, avisoError, avisoOk, ayuda, botonPrimario, botonSecundario, campo, etiqueta } from './estilos'
 
 // Parte final del editor: ver como queda el correo, enviarse una prueba y publicar
 // la noticia en la web, por correo o en los dos sitios a la vez.
@@ -200,9 +200,9 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
       : normal
 
   return (
-    <div className="mt-8 border-t-[3px] border-double border-[#1a1a1a] pt-6">
-      <h2 className={`${fuenteTitular} text-2xl font-bold`}>Revisar y enviar</h2>
-      <p className="mt-1 text-sm text-[#1a1a1a]/70">
+    <div className="tarjeta mt-7 p-4 sm:p-5">
+      <h2 className="text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">Revisar y enviar</h2>
+      <p className={`${ayuda} mt-1`}>
         {enviado
           ? 'Puedes ver cómo quedó el correo que se envió.'
           : 'Cada botón guarda primero la noticia; la vista previa y los envíos usan exactamente lo guardado.'}
@@ -226,7 +226,7 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
         </div>
       )}
 
-      <h3 className={`${etiqueta} mt-8`}>Publicar</h3>
+      <h3 className={`${etiqueta} mt-7`}>Publicar</h3>
       <div className="grid gap-2 sm:grid-cols-3">
         <button type="button" className={botonSecundario} disabled={bloquearEnvio || publicada} onClick={publicarEnWeb}>
           {publicada ? '✓ Ya está en la web' : accion === 'web' ? 'Publicando…' : 'Publicar en la web'}
@@ -238,7 +238,7 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
           {rotulo('ambos', 'Publicar en ambos')}
         </button>
       </div>
-      <p className="mt-2 text-sm text-[#1a1a1a]/60">
+      <p className={`${ayuda} mt-2`}>
         {publicada && enviado
           ? 'Esta noticia ya está en la web y su correo ya se envió.'
           : publicada
@@ -249,7 +249,7 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
       </p>
 
       {confirmar && (
-        <div role="alertdialog" aria-labelledby="confirmar-envio" className="mt-4 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-4 text-[#6b1414]">
+        <div role="alertdialog" aria-labelledby="confirmar-envio" className={`${avisoError} mt-4`}>
           <p id="confirmar-envio" className="font-semibold">
             {confirmar.destino === 'ambos' ? '¿Publicar' : '¿Enviar'} «{titular || 'sin titular'}»
             {confirmar.destino === 'ambos' ? ' en la web y enviarla por correo' : ' por correo'} a {confirmar.total}{' '}
@@ -260,11 +260,11 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
             {confirmar.destino === 'ambos' ? ' La noticia en la web sí podrás corregirla o retirarla después.' : ''}
           </p>
           <div className="mt-4 grid gap-2 sm:flex">
-            <button type="button" className="min-h-12 bg-[#8b1a1a] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white hover:bg-[#6b1414]"
+            <button type="button" className={botonPrimario}
               onClick={enviarATodos}>
               {confirmar.destino === 'ambos' ? `Sí, publicar y enviar a ${confirmar.total}` : `Sí, enviar a ${confirmar.total}`}
             </button>
-            <button type="button" className="min-h-12 border border-[#1a1a1a]/40 bg-white px-5 text-sm font-semibold text-[#1a1a1a]"
+            <button type="button" className={botonSecundario}
               onClick={() => setConfirmar(null)}>
               Cancelar
             </button>
@@ -281,22 +281,22 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
       {vista && (
         <div className="mt-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-[#1a1a1a]/70">
-              Así llega el correo · Peso: <strong className={pesoKb > LIMITE_KB ? 'text-[#8b1a1a]' : ''}>{pesoKb} KB</strong>
+            <p className={ayuda}>
+              Así llega el correo. Peso: <strong className={pesoKb > LIMITE_KB ? 'text-acento-tinta' : 'text-tinta'}>{pesoKb} KB</strong>
             </p>
-            <div className="flex gap-1" role="group" aria-label="Ancho de la vista previa">
+            <div className="flex rounded-full bg-relleno p-1" role="group" aria-label="Ancho de la vista previa">
               {(['movil', 'ordenador'] as const).map(a => (
                 <button key={a} type="button" onClick={() => setAncho(a)} aria-pressed={ancho === a}
-                  className={`min-h-11 border px-3 text-sm ${ancho === a ? 'border-[#1a1a1a] bg-[#1a1a1a] text-[#fbf8f1]' : 'border-[#1a1a1a]/30 bg-white'}`}>
+                  className={`min-h-9 rounded-full px-3.5 text-[0.9375rem] font-semibold transition ${ancho === a ? 'bg-superficie text-tinta shadow-[0_1px_3px_rgba(0,0,0,0.14)]' : 'text-tinta-2'}`}>
                   {a === 'movil' ? 'Móvil' : 'Ordenador'}
                 </button>
               ))}
             </div>
           </div>
           {[...vista.errores, ...vista.avisos].map(t => (
-            <p key={t} className={`${vista.errores.includes(t) ? avisoError : 'border-l-4 border-[#b7791f] bg-[#b7791f]/10 px-4 py-3 text-[#6b4a10]'} mt-3 text-sm`}>{t}</p>
+            <p key={t} className={`${vista.errores.includes(t) ? avisoError : avisoAtencion} mt-3`}>{t}</p>
           ))}
-          <div className="mt-3 overflow-x-auto border border-[#1a1a1a]/25 bg-[#efebe2]">
+          <div className="mt-3 overflow-x-auto rounded-2xl bg-[#efebe2] shadow-[inset_0_0_0_1px_var(--linea)]">
             <iframe
               title="Vista previa del correo"
               sandbox=""

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { pedirJson, SesionExpirada } from '@/lib/admin-cliente'
 import type { NoticiaAdmin } from '@/lib/noticias-admin'
-import { avisoError, avisoOk, titular } from './estilos'
+import { avisoError, avisoOk, ayuda, botonPrimario, botonPeligro, botonSecundario, verde } from './estilos'
 
 type Props = {
   onAbrir: (id: string) => void
@@ -14,8 +14,8 @@ const fecha = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 
 function Estado({ texto, tono }: { texto: string; tono: 'ok' | 'neutro' | 'apagado' }) {
-  const color = tono === 'ok' ? 'border-[#2f6b3a] text-[#1f4a27] bg-[#2f6b3a]/10' : tono === 'neutro' ? 'border-[#1a1a1a]/50 text-[#1a1a1a]' : 'border-[#1a1a1a]/20 text-[#1a1a1a]/50'
-  return <span className={`inline-block border px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.1em] ${color}`}>{texto}</span>
+  const color = tono === 'ok' ? `bg-[#34c759]/16 ${verde}` : tono === 'neutro' ? 'bg-relleno text-tinta' : 'bg-relleno text-tinta-3'
+  return <span className={`inline-block rounded-full px-2.5 py-0.5 text-[0.8125rem] font-semibold ${color}`}>{texto}</span>
 }
 
 const nombreDe = (n: NoticiaAdmin) => n.web_title || n.title || '(sin título)'
@@ -53,7 +53,7 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
   }
 
   if (error) return <p role="alert" className={avisoError}>{error}</p>
-  if (!noticias) return <p className="py-8 text-[#1a1a1a]/60">Cargando…</p>
+  if (!noticias) return <p className={`${ayuda} py-8`}>Cargando…</p>
 
   return (
     <section>
@@ -64,20 +64,20 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
       )}
 
       {noticias.length === 0 ? (
-        <p className="py-8 text-[#1a1a1a]/60">Todavía no hay noticias.</p>
+        <p className={`${ayuda} py-8`}>Todavía no hay noticias.</p>
       ) : (
-        <ul className="divide-y divide-[#1a1a1a]/20 border-y border-[#1a1a1a]/20">
+        <ul className="space-y-3">
           {noticias.map(n => {
             const id = String(n.id)
             const antigua = n.blocks === null && n.web_blocks === null
             const publicada = !antigua && n.web_blocks !== null && n.web_status === 'publicada'
             const cuando = n.sent_at || n.web_published_at || n.updated_at || n.published_at
             return (
-              <li key={id} className="py-5">
-                <p className="text-xs uppercase tracking-[0.15em] text-[#1a1a1a]/60">{fecha(cuando)}</p>
-                <h3 className={`${titular} mt-1 text-xl font-bold leading-snug`}>{nombreDe(n)}</h3>
+              <li key={id} className="tarjeta px-4 py-4 sm:px-5">
+                <p className="text-[0.9375rem] font-semibold text-tinta-2">{fecha(cuando)}</p>
+                <h3 className="mt-1 text-[1.25rem] font-bold leading-snug tracking-[-0.02em]">{nombreDe(n)}</h3>
 
-                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.9375rem] text-tinta-2">
                   <span className="flex items-center gap-2">
                     Correo:
                     {antigua ? (
@@ -100,22 +100,21 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
                   </span>
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   {!antigua && (
-                    <button type="button" onClick={() => onAbrir(id)}
-                      className="min-h-12 border border-[#1a1a1a] px-4 text-sm font-semibold hover:bg-[#1a1a1a] hover:text-[#fbf8f1]">
+                    <button type="button" onClick={() => onAbrir(id)} className={botonSecundario}>
                       Editar
                     </button>
                   )}
                   <button type="button" onClick={() => { setConfirmando(id); setAviso(null) }}
                     disabled={eliminando !== null}
-                    className={`${antigua ? 'col-span-2' : ''} min-h-12 border border-[#8b1a1a] bg-white px-4 text-sm font-semibold text-[#8b1a1a] transition hover:bg-[#8b1a1a] hover:text-white disabled:opacity-50 sm:col-span-1`}>
+                    className={`${antigua ? 'col-span-2' : ''} ${botonPeligro} min-h-12! sm:col-span-1`}>
                     Eliminar
                   </button>
                 </div>
 
                 {confirmando === id && (
-                  <div role="alertdialog" aria-labelledby={`borrar-${id}`} className="mt-4 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-4 text-[#6b1414]">
+                  <div role="alertdialog" aria-labelledby={`borrar-${id}`} className={`${avisoError} mt-4`}>
                     <p id={`borrar-${id}`} className="font-semibold">¿Eliminar «{nombreDe(n)}»?</p>
                     <p className="mt-2">Esto borra la noticia para siempre.</p>
                     {publicada && (
@@ -132,11 +131,11 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
                     )}
                     <div className="mt-4 grid grid-cols-2 gap-2 sm:flex">
                       <button type="button" onClick={() => eliminar(n)} disabled={eliminando !== null}
-                        className="min-h-12 bg-[#8b1a1a] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-[#6b1414] disabled:opacity-60">
+                        className={botonPrimario}>
                         {eliminando === id ? 'Eliminando…' : 'Sí, eliminar'}
                       </button>
                       <button type="button" onClick={() => setConfirmando(null)} disabled={eliminando !== null}
-                        className="min-h-12 border border-[#1a1a1a]/40 bg-white px-5 text-sm font-semibold text-[#1a1a1a] hover:border-[#1a1a1a] disabled:opacity-60">
+                        className={botonSecundario}>
                         Cancelar
                       </button>
                     </div>

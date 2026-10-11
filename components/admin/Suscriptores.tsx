@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { pedirJson, SesionExpirada } from '@/lib/admin-cliente'
-import { avisoError, botonPeligro } from './estilos'
+import { avisoError, ayuda, botonConfirmar, botonDiscreto } from './estilos'
 
 type Suscriptor = { id: string; email: string; created_at: string }
 
@@ -43,32 +43,32 @@ export default function Suscriptores() {
   }
 
   if (error) return <p role="alert" className={avisoError}>{error}</p>
-  if (!lista) return <p className="py-8 text-[#1a1a1a]/60">Cargando…</p>
+  if (!lista) return <p className={`${ayuda} py-8`}>Cargando…</p>
 
   return (
     <section>
-      <p className="mb-4 text-[#1a1a1a]/70">
-        <strong className="text-[#1a1a1a]">{lista.length}</strong> {lista.length === 1 ? 'suscriptor' : 'suscriptores'}
+      <p className="mb-3 text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">
+        {lista.length} {lista.length === 1 ? 'suscriptor' : 'suscriptores'}
       </p>
-      <ul className="divide-y divide-[#1a1a1a]/20 border-y border-[#1a1a1a]/20">
+      <ul className="tarjeta divide-y divide-linea overflow-hidden">
         {lista.map(s => (
-          <li key={s.id} className="py-3">
+          <li key={s.id} className="px-4 py-3 sm:px-5">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-semibold">{s.email}</p>
-                <p className="text-sm text-[#1a1a1a]/60">
+                <p className="truncate text-[1.0625rem] font-semibold">{s.email}</p>
+                <p className="text-[0.9375rem] text-tinta-2">
                   {new Date(s.created_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
               </div>
-              <button type="button" onClick={() => setConfirmando(s.id)} className="min-h-11 shrink-0 px-2 text-sm font-semibold text-[#8b1a1a] underline">
+              <button type="button" onClick={() => setConfirmando(s.id)} className="min-h-11 shrink-0 rounded-full px-2 text-[0.9375rem] font-semibold text-acento-tinta">
                 Eliminar
               </button>
             </div>
             {confirmando === s.id && (
-              <div role="alertdialog" aria-label="Confirmar eliminación" className="mt-2 flex flex-wrap items-center gap-2 bg-[#8b1a1a]/10 px-3 py-2">
-                <p className="mr-auto text-sm text-[#6b1414]">¿Eliminar a {s.email}?</p>
-                <button type="button" className={botonPeligro} onClick={() => eliminar(s.id)}>Sí, eliminar</button>
-                <button type="button" className="min-h-11 px-3 text-sm underline" onClick={() => setConfirmando(null)}>Cancelar</button>
+              <div role="alertdialog" aria-label="Confirmar eliminación" className={`${avisoError} mt-2 mb-1 flex flex-wrap items-center gap-2`}>
+                <p className="mr-auto break-all">¿Eliminar a {s.email}?</p>
+                <button type="button" className={botonConfirmar} onClick={() => eliminar(s.id)}>Sí, eliminar</button>
+                <button type="button" className={botonDiscreto} onClick={() => setConfirmando(null)}>Cancelar</button>
               </div>
             )}
           </li>

@@ -1,15 +1,30 @@
-// Clases compartidas del panel de admin (mismo estilo de diario que la portada).
-export const titular = 'font-[family-name:var(--font-playfair)]'
-export const etiqueta = 'mb-1 block text-xs font-semibold uppercase tracking-[0.15em] text-[#1a1a1a]/70'
+// Clases compartidas del panel de admin. Mismo estilo que la web publica: letra del sistema,
+// tarjetas blancas de esquinas amplias y botones en capsula. Los colores salen de app/globals.css,
+// asi que el panel tambien se adapta solo al modo oscuro.
+export const titular = 'tracking-[-0.02em]'
+export const etiqueta = 'mb-1.5 block text-[0.8125rem] font-semibold text-tinta-2'
 export const campo =
-  'w-full min-h-12 rounded-none border border-[#1a1a1a]/40 bg-white px-3 py-2 text-base text-[#1a1a1a] placeholder:text-[#1a1a1a]/40 focus:border-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#1a1a1a] disabled:bg-[#1a1a1a]/5'
-export const botonPrimario =
-  'min-h-12 rounded-none bg-[#1a1a1a] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-[#fbf8f1] transition hover:bg-[#8b1a1a] disabled:cursor-not-allowed disabled:opacity-50'
-export const botonSecundario =
-  'min-h-12 rounded-none border border-[#1a1a1a] bg-white px-5 text-sm font-semibold uppercase tracking-[0.12em] text-[#1a1a1a] transition hover:bg-[#1a1a1a] hover:text-[#fbf8f1] disabled:cursor-not-allowed disabled:opacity-50'
+  'w-full min-h-12 rounded-xl bg-superficie px-3.5 py-2.5 text-[1.0625rem] text-tinta shadow-[inset_0_0_0_1px_var(--linea)] placeholder:text-tinta-3 focus:shadow-[inset_0_0_0_2px_var(--acento)] focus:outline-none disabled:opacity-60'
+
+const boton =
+  'inline-flex min-h-12 items-center justify-center rounded-full px-5 text-center text-base font-semibold leading-tight transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100'
+export const botonPrimario = `${boton} bg-acento text-white hover:brightness-110`
+export const botonSecundario = `${boton} bg-superficie text-tinta shadow-[inset_0_0_0_1px_var(--linea)] hover:bg-relleno`
 export const botonPeligro =
-  'min-h-11 rounded-none border border-[#8b1a1a] bg-white px-4 text-sm font-semibold text-[#8b1a1a] transition hover:bg-[#8b1a1a] hover:text-white disabled:opacity-50'
+  'inline-flex min-h-11 items-center justify-center rounded-full bg-acento/12 px-4 text-[0.9375rem] font-semibold text-acento-tinta transition hover:bg-acento/20 active:scale-[0.98] disabled:opacity-50'
+// El "Sí, eliminar" de las confirmaciones: rojo lleno, para que destaque sobre el aviso.
+export const botonConfirmar =
+  'inline-flex min-h-11 items-center justify-center rounded-full bg-acento px-4 text-[0.9375rem] font-semibold text-white transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50'
+// "Cancelar", "Seguir editando": una accion discreta, sin fondo.
+export const botonDiscreto =
+  'inline-flex min-h-11 items-center justify-center rounded-full px-3 text-[0.9375rem] font-semibold text-tinta-2 transition hover:text-tinta'
 export const botonIcono =
-  'flex h-11 w-11 items-center justify-center border border-[#1a1a1a]/30 bg-white text-lg text-[#1a1a1a] transition hover:border-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-30'
-export const avisoOk = 'border-l-4 border-[#2f6b3a] bg-[#2f6b3a]/10 px-4 py-3 text-[#1f4a27]'
-export const avisoError = 'border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-3 text-[#6b1414]'
+  'flex h-10 w-10 items-center justify-center rounded-full bg-relleno text-lg text-tinta transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-30'
+
+export const avisoOk = 'rounded-2xl bg-[#34c759]/16 px-4 py-3 leading-snug'
+export const avisoError = 'rounded-2xl bg-acento/12 px-4 py-3 leading-snug'
+export const avisoAtencion = 'rounded-2xl bg-[#ff9f0a]/18 px-4 py-3 leading-snug'
+// Texto de ayuda, en gris.
+export const ayuda = 'text-[0.9375rem] leading-snug text-tinta-2'
+// Verde de "hecho": publicada, enviado.
+export const verde = 'text-[#1d8a3a] dark:text-[#30d158]'

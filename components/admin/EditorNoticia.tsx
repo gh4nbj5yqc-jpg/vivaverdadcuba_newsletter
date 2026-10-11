@@ -7,7 +7,7 @@ import type { EstadoWeb, NoticiaAdmin } from '@/lib/noticias-admin'
 import EditorBloques from './EditorBloques'
 import CampoImagen from './CampoImagen'
 import RevisarYPublicar from './RevisarYPublicar'
-import { avisoError, avisoOk, botonPeligro, botonPrimario, botonSecundario, campo, etiqueta, titular } from './estilos'
+import { avisoAtencion, avisoError, avisoOk, ayuda, botonConfirmar, botonDiscreto, botonPrimario, botonSecundario, campo, etiqueta, titular, verde } from './estilos'
 
 // Editor unico: la noticia se escribe UNA sola vez y sirve para la web y para el correo.
 
@@ -152,11 +152,11 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
     }
   }
 
-  if (cargando) return <p className="py-8 text-[#1a1a1a]/60">Cargando noticia…</p>
+  if (cargando) return <p className={`${ayuda} py-8`}>Cargando noticia…</p>
   if (errorCarga) return <p role="alert" className={avisoError}>{errorCarga}</p>
   if (antigua) {
     return (
-      <p className={`${avisoError} text-base`}>
+      <p className={avisoError}>
         Esta es una edición antigua (formato anterior al editor de bloques). Se conserva en el historial, pero no se puede
         editar ni publicar.
       </p>
@@ -167,13 +167,13 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
 
   return (
     <section>
-      <div className="mb-5 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[#1a1a1a]/70">
+      <div className={`${ayuda} mb-5 flex flex-wrap gap-x-6 gap-y-1 px-1`}>
         <p>
-          Web: <strong className={publicada ? 'text-[#2f6b3a]' : ''}>{publicada ? 'Publicada' : 'Borrador'}</strong>
+          Web: <strong className={publicada ? verde : 'text-tinta'}>{publicada ? 'Publicada' : 'Borrador'}</strong>
           {publicada && publicadaEl ? ` · desde el ${fecha(publicadaEl)}` : ''}
         </p>
         <p>
-          Correo: <strong className={enviado.sent ? 'text-[#2f6b3a]' : ''}>{enviado.sent ? 'Enviado' : 'No enviado'}</strong>
+          Correo: <strong className={enviado.sent ? verde : 'text-tinta'}>{enviado.sent ? 'Enviado' : 'No enviado'}</strong>
           {enviado.sent && enviado.sentAt ? ` · el ${fecha(enviado.sentAt)}` : ''}
         </p>
       </div>
@@ -184,28 +184,28 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
         </p>
       )}
       {correoAparte && (
-        <p className="mb-5 border-l-4 border-[#b7791f] bg-[#b7791f]/10 px-4 py-3 text-[#6b4a10]">
+        <p className={`${avisoAtencion} mb-5`}>
           Esta noticia tenía un correo escrito aparte con el editor anterior. Ahora el correo lleva lo mismo que ves aquí: al
           guardar o pedir la vista previa, ese correo anterior se reemplaza.
         </p>
       )}
 
-      <div className="mb-6">
+      <div className="tarjeta mb-3 p-4">
         <label className={etiqueta} htmlFor="titular">Titular</label>
-        <input id="titular" className={`${campo} ${titular} text-lg font-bold`} value={titulo} maxLength={200}
+        <input id="titular" className={`${campo} ${titular} text-xl! font-bold`} value={titulo} maxLength={200}
           placeholder="El titular de la noticia" aria-describedby="titular-ayuda" onChange={e => setTitulo(e.target.value)} />
-        <p id="titular-ayuda" className="mt-1 text-sm text-[#1a1a1a]/60">Es el titular en la web y también el asunto del correo.</p>
+        <p id="titular-ayuda" className={`${ayuda} mt-1.5`}>Es el titular en la web y también el asunto del correo.</p>
       </div>
 
-      <div className="mb-8">
+      <div className="tarjeta mb-7 p-4">
         <p className={etiqueta}>Imagen de portada</p>
         <CampoImagen url={portada} onUrl={setPortada} />
       </div>
 
-      <h2 className={`${titular} mb-3 text-2xl font-bold`}>Contenido de la noticia</h2>
+      <h2 className="mb-3 text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">Contenido de la noticia</h2>
       <EditorBloques bloques={bloques} setBloques={setBloques} modo="web" maxImagenes={MAX_IMAGENES - (portada ? 1 : 0)} />
 
-      <div className="mt-8 border-t border-[#1a1a1a]/20 pt-5">
+      <div className="mt-7">
         <div className="grid gap-2 sm:flex">
           {publicada ? (
             <>
@@ -223,13 +223,13 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
           )}
         </div>
         {confirmarRetiro && (
-          <div role="alertdialog" aria-label="Confirmar retiro" className="mt-4 flex flex-wrap items-center gap-2 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-3">
-            <p className="mr-auto text-[#6b1414]">¿Retirar la noticia de la web? Dejará de verse en /noticias.</p>
-            <button type="button" className={botonPeligro} onClick={() => guardarConAviso('borrador')}>Sí, retirar</button>
-            <button type="button" className="min-h-11 px-3 text-sm underline" onClick={() => setConfirmarRetiro(false)}>Cancelar</button>
+          <div role="alertdialog" aria-label="Confirmar retiro" className={`${avisoError} mt-4 flex flex-wrap items-center gap-2`}>
+            <p className="mr-auto">¿Retirar la noticia de la web? Dejará de verse en /noticias.</p>
+            <button type="button" className={botonConfirmar} onClick={() => guardarConAviso('borrador')}>Sí, retirar</button>
+            <button type="button" className={botonDiscreto} onClick={() => setConfirmarRetiro(false)}>Cancelar</button>
           </div>
         )}
-        {pendiente && <p className="mt-3 text-sm font-semibold text-[#8b1a1a]">● Hay cambios sin guardar</p>}
+        {pendiente && <p className="mt-3 px-1 text-[0.9375rem] font-semibold text-acento-tinta">● Hay cambios sin guardar</p>}
         {aviso && (
           <p role={aviso.tipo === 'error' ? 'alert' : 'status'} className={`${aviso.tipo === 'ok' ? avisoOk : avisoError} mt-4`}>
             {aviso.texto}

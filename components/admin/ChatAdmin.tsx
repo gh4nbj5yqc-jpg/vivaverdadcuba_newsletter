@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { pedirJson, SesionExpirada } from '@/lib/admin-cliente'
 import type { MensajeChat } from '@/lib/chat'
 import Bolita from '@/components/chat/Bolita'
-import { avisoError, botonPeligro } from './estilos'
+import { avisoError, ayuda, botonConfirmar, botonDiscreto, botonPeligro } from './estilos'
 
 // Pestaña "Chat" del panel: ver los mensajes del chat publico y borrar el que haga falta.
 // El chat no se modera; esto es solo para poder quitar algo si un dia es necesario
@@ -39,26 +39,26 @@ export default function ChatAdmin() {
     }
   }
 
-  if (!mensajes) return error ? <p role="alert" className={avisoError}>{error}</p> : <p className="py-8 text-[#1a1a1a]/60">Cargando…</p>
+  if (!mensajes) return error ? <p role="alert" className={avisoError}>{error}</p> : <p className={`${ayuda} py-8`}>Cargando…</p>
 
   return (
     <section>
-      <p className="mb-4 text-sm text-[#1a1a1a]/70">
+      <p className={`${ayuda} mb-4`}>
         Mensajes del chat público, del más nuevo al más viejo. Se borran solos a los 3 días.
       </p>
       {error && <p role="alert" className={`${avisoError} mb-4`}>{error}</p>}
 
       {mensajes.length === 0 ? (
-        <p className="py-8 text-[#1a1a1a]/60">No hay mensajes en el chat.</p>
+        <p className={`${ayuda} py-8`}>No hay mensajes en el chat.</p>
       ) : (
-        <ul className="divide-y divide-[#1a1a1a]/20 border-y border-[#1a1a1a]/20">
+        <ul className="tarjeta divide-y divide-linea overflow-hidden">
           {mensajes.map(m => (
-            <li key={m.id} className="py-4">
+            <li key={m.id} className="px-4 py-3.5 sm:px-5">
               <div className="flex items-start gap-3">
                 <Bolita color={m.color} className="mt-1.5" />
                 <div className="min-w-0 flex-1">
-                  <p className="whitespace-pre-wrap break-words">{m.texto}</p>
-                  <p className="mt-1 text-xs text-[#1a1a1a]/50">{fecha(m.created_at)}</p>
+                  <p className="whitespace-pre-wrap break-words text-[1.0625rem] leading-snug">{m.texto}</p>
+                  <p className="mt-1 text-[0.8125rem] text-tinta-2">{fecha(m.created_at)}</p>
                 </div>
                 {confirmando !== m.id && (
                   <button type="button" className={botonPeligro} disabled={borrando !== null} onClick={() => setConfirmando(m.id)}>
@@ -67,12 +67,12 @@ export default function ChatAdmin() {
                 )}
               </div>
               {confirmando === m.id && (
-                <div role="alertdialog" aria-label="Confirmar borrado" className="mt-3 flex flex-wrap items-center gap-2 border-l-4 border-[#8b1a1a] bg-[#8b1a1a]/10 px-4 py-3">
-                  <p className="mr-auto text-[#6b1414]">¿Borrar este mensaje para siempre?</p>
-                  <button type="button" className={botonPeligro} disabled={borrando !== null} onClick={() => borrar(m.id)}>
+                <div role="alertdialog" aria-label="Confirmar borrado" className={`${avisoError} mt-3 flex flex-wrap items-center gap-2`}>
+                  <p className="mr-auto">¿Borrar este mensaje para siempre?</p>
+                  <button type="button" className={botonConfirmar} disabled={borrando !== null} onClick={() => borrar(m.id)}>
                     {borrando === m.id ? 'Borrando…' : 'Sí, borrar'}
                   </button>
-                  <button type="button" className="min-h-11 px-3 text-sm underline" onClick={() => setConfirmando(null)}>Cancelar</button>
+                  <button type="button" className={botonDiscreto} onClick={() => setConfirmando(null)}>Cancelar</button>
                 </div>
               )}
             </li>

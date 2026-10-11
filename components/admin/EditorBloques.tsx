@@ -11,7 +11,7 @@ import {
   type Modo,
 } from '@/lib/bloques'
 import CampoImagen from './CampoImagen'
-import { botonIcono, botonPeligro, botonSecundario, campo, etiqueta } from './estilos'
+import { ayuda, botonConfirmar, botonDiscreto, botonIcono, botonSecundario, campo, etiqueta } from './estilos'
 
 export type ArticuloPublicado = { id: string; titulo: string }
 
@@ -52,13 +52,13 @@ export default function EditorBloques({ bloques, setBloques, modo, maxImagenes, 
 
   return (
     <div>
-      <ol className="space-y-4">
+      <ol className="space-y-3">
         {bloques.map((b, i) => (
-          <li key={b.id} className="border border-[#1a1a1a]/25 bg-white/70">
-            <div className="flex items-center justify-between gap-2 border-b border-[#1a1a1a]/15 px-3 py-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#1a1a1a]/70">
+          <li key={b.id} className="tarjeta overflow-hidden">
+            <div className="flex items-center justify-between gap-2 border-b border-linea py-2 pr-2.5 pl-4">
+              <p className="text-[0.9375rem] font-semibold">
                 {i + 1}. {b.tipo === 'imagen' ? 'Imagen' : 'Texto'}
-                {b.etiqueta && <span className="font-normal normal-case tracking-normal"> · {b.etiqueta}</span>}
+                {b.etiqueta && <span className="font-normal text-tinta-2"> · {b.etiqueta}</span>}
               </p>
               <div className="flex gap-1">
                 <button type="button" aria-label="Subir bloque" className={botonIcono} disabled={deshabilitado || i === 0} onClick={() => mover(i, -1)}>
@@ -67,21 +67,21 @@ export default function EditorBloques({ bloques, setBloques, modo, maxImagenes, 
                 <button type="button" aria-label="Bajar bloque" className={botonIcono} disabled={deshabilitado || i === bloques.length - 1} onClick={() => mover(i, 1)}>
                   ↓
                 </button>
-                <button type="button" aria-label="Eliminar bloque" className={`${botonIcono} text-[#8b1a1a]`} disabled={deshabilitado} onClick={() => setConfirmando(b.id)}>
+                <button type="button" aria-label="Eliminar bloque" className={`${botonIcono} text-acento-tinta!`} disabled={deshabilitado} onClick={() => setConfirmando(b.id)}>
                   ✕
                 </button>
               </div>
             </div>
 
             {confirmando === b.id && (
-              <div role="alertdialog" aria-label="Confirmar eliminación" className="flex flex-wrap items-center gap-2 border-b border-[#8b1a1a]/30 bg-[#8b1a1a]/10 px-3 py-3">
-                <p className="mr-auto text-sm text-[#6b1414]">¿Eliminar este bloque?</p>
-                <button type="button" className={botonPeligro} onClick={() => eliminar(b.id)}>Sí, eliminar</button>
-                <button type="button" className="min-h-11 px-3 text-sm underline" onClick={() => setConfirmando(null)}>Cancelar</button>
+              <div role="alertdialog" aria-label="Confirmar eliminación" className="flex flex-wrap items-center gap-2 border-b border-linea bg-acento/12 px-4 py-3">
+                <p className="mr-auto">¿Eliminar este bloque?</p>
+                <button type="button" className={botonConfirmar} onClick={() => eliminar(b.id)}>Sí, eliminar</button>
+                <button type="button" className={botonDiscreto} onClick={() => setConfirmando(null)}>Cancelar</button>
               </div>
             )}
 
-            <div className="space-y-3 p-3">
+            <div className="space-y-4 p-4">
               {b.tipo === 'imagen' ? (
                 <>
                   <CampoImagen url={b.url} onUrl={url => cambiar(b.id, { url })} deshabilitado={deshabilitado} />
@@ -124,7 +124,7 @@ export default function EditorBloques({ bloques, setBloques, modo, maxImagenes, 
                         )}
                       </select>
                       {articulos.length === 0 && (
-                        <p className="mt-1 text-sm text-[#1a1a1a]/60">Aún no hay artículos publicados en la web para enlazar.</p>
+                        <p className={`${ayuda} mt-1.5`}>Aún no hay artículos publicados en la web para enlazar.</p>
                       )}
                     </div>
                   )}
@@ -136,12 +136,12 @@ export default function EditorBloques({ bloques, setBloques, modo, maxImagenes, 
       </ol>
 
       {bloques.length === 0 && (
-        <p className="border border-dashed border-[#1a1a1a]/30 px-4 py-6 text-center text-[#1a1a1a]/60">
+        <p className={`${ayuda} rounded-[1.75rem] border border-dashed border-tinta-3 px-4 py-6 text-center`}>
           No hay bloques. Añade una imagen o un texto.
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <button type="button" className={botonSecundario} disabled={deshabilitado || limiteImagenes}
           onClick={() => setBloques(prev => [...prev, bloqueImagen()])}>
           + Imagen
@@ -151,7 +151,7 @@ export default function EditorBloques({ bloques, setBloques, modo, maxImagenes, 
           + Texto
         </button>
       </div>
-      <p className="mt-2 text-sm text-[#1a1a1a]/60">
+      <p className={`${ayuda} mt-2 px-1`}>
         {imagenes} de {maxImagenes} imágenes{limiteImagenes ? ' · has llegado al máximo' : ''}
       </p>
     </div>
