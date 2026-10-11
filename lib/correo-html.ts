@@ -15,6 +15,8 @@ export type DatosCorreo = {
   // Enlace "Darme de baja" de ESTE destinatario (en la vista previa y la prueba, uno que no da de baja a nadie).
   enlaceBaja: string
   fecha: Date
+  // true solo en el correo de bienvenida: añade una nota corta arriba para quien se acaba de suscribir.
+  bienvenida?: boolean
 }
 
 export type CorreoConstruido = {
@@ -52,7 +54,9 @@ function boton(href: string) {
 </td></tr></table>`
 }
 
-export function construirCorreo({ asunto, bloques, publicados, fecha, enlaceBaja }: DatosCorreo): CorreoConstruido {
+const NOTA_BIENVENIDA = `Gracias por suscribirte a ${NOMBRE_SITIO}. Este es el último correo que enviamos; los próximos te llegarán a esta misma dirección.`
+
+export function construirCorreo({ asunto, bloques, publicados, fecha, enlaceBaja, bienvenida = false }: DatosCorreo): CorreoConstruido {
   const errores: string[] = []
   const avisos: string[] = []
   const visibles = bloquesVisibles(bloques)
@@ -65,7 +69,15 @@ export function construirCorreo({ asunto, bloques, publicados, fecha, enlaceBaja
   const primerParrafo = visibles.flatMap(b => (b.tipo === 'texto' ? parrafos(b.texto) : []))[0] ?? ''
 
   const filas: string[] = []
-  const texto: string[] = [asunto, '']
+  const texto: string[] = bienvenida ? [NOTA_BIENVENIDA, '', asunto, ''] : [asunto, '']
+  if (bienvenida) {
+    filas.push(
+      fila(
+        `<p style="margin:0;padding:12px 14px;border:1px solid #d6d1c4;font-family:${FUENTE};font-size:14px;line-height:1.5;color:${GRIS};text-align:center;">${escapar(NOTA_BIENVENIDA)}</p>`,
+        '0 28px 18px 28px'
+      )
+    )
+  }
   let textosPrevios = 0
 
   for (const b of visibles) {
@@ -132,7 +144,7 @@ export function construirCorreo({ asunto, bloques, publicados, fecha, enlaceBaja
 <title>${escapar(asunto)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:${FONDO};">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${escapar(primerParrafo.slice(0, 140))}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${escapar((bienvenida ? NOTA_BIENVENIDA : primerParrafo).slice(0, 140))}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${FONDO};">
 <tr><td align="center" style="padding:16px 8px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:${CREMA};">

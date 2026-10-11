@@ -23,6 +23,7 @@ const sinSuscripcion = () => () => {};
 export default function Home() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('');
+  const [conUltimoCorreo, setConUltimoCorreo] = useState(false);
   const fecha = useSyncExternalStore(sinSuscripcion, fechaDeHoy, () => '');
 
   const handleSubscribe = async (e: React.FormEvent) => {
@@ -37,6 +38,8 @@ export default function Home() {
       });
 
       if (res.ok) {
+        const datos = await res.json().catch(() => null);
+        setConUltimoCorreo(Boolean(datos?.ultimoCorreo));
         setStatus('success');
         setEmail('');
       } else {
@@ -114,8 +117,13 @@ export default function Home() {
                 role="status"
                 className="mt-5 border-l-4 border-[#2f6b3a] bg-[#2f6b3a]/10 px-4 py-3 text-left text-[#1f4a27]"
               >
-                <strong>¡Listo!</strong> Te has suscrito. Recibirás la próxima
-                edición en tu correo.
+                <strong>¡Listo!</strong> Te has suscrito.{' '}
+                {conUltimoCorreo
+                  ? 'Te acabamos de enviar nuestro último correo.'
+                  : 'Recibirás la próxima edición en tu correo.'}{' '}
+                Si no lo ves en la bandeja de entrada, búscalo en Spam o
+                Promociones y márcalo como «No es spam» para no perderte los
+                siguientes.
               </p>
             )}
             {status === 'error' && (

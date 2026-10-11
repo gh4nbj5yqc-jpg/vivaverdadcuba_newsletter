@@ -21,7 +21,8 @@ type CorreoCargado = {
   // Version para la vista previa y la prueba: su enlace de baja no da de baja a nadie.
   correo: CorreoConstruido
   // Version para un suscriptor concreto, con SU enlace de baja firmado.
-  construirPara: (idSuscriptor: string) => CorreoConstruido
+  // Con bienvenida = true lleva arriba la nota para quien se acaba de suscribir.
+  construirPara: (idSuscriptor: string, bienvenida?: boolean) => CorreoConstruido
 }
 
 export async function cargarCorreo(id: string): Promise<CorreoCargado> {
@@ -34,8 +35,8 @@ export async function cargarCorreo(id: string): Promise<CorreoCargado> {
   const bloques = noticia.blocks
   // Un correo ya enviado se muestra con su fecha de envio. Misma fecha para todos los destinatarios.
   const fecha = noticia.sent_at ? new Date(noticia.sent_at) : new Date()
-  const construirPara = (idSuscriptor: string) =>
-    construirCorreo({ asunto: noticia.title ?? '', bloques, publicados, fecha, enlaceBaja: urlPaginaBaja(idSuscriptor) })
+  const construirPara = (idSuscriptor: string, bienvenida = false) =>
+    construirCorreo({ asunto: noticia.title ?? '', bloques, publicados, fecha, enlaceBaja: urlPaginaBaja(idSuscriptor), bienvenida })
 
   return { noticia, correo: construirPara(ID_PRUEBA), construirPara }
 }
@@ -82,6 +83,43 @@ export async function enviarPrueba(id: string, destino: string) {
     headers: cabecerasBaja(ID_PRUEBA),
   })
   if (error || !data?.id) throw new ErrorNoticia('Resend no aceptó el correo de prueba: ' + (error?.message ?? 'sin respuesta'), 502)
+  return { resendId: data.id }
+}
+
+// Id del ultimo correo que ya se envio a los suscriptores (null si todavia no se ha enviado ninguno).
+export async function ultimaEdicionEnviada(): Promise<string | null> {
+  const { data, error } = await supabaseAdmin
+    .from('editions')
+    .select('id')
+    .eq('sent', true)
+    .not('blocks', 'is', null)
+    .order('sent_at', { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw new ErrorNoticia('No se pudo buscar el último correo enviado: ' + error.message, 500)
+  return data ? String(data.id) : null
+}
+
+// Correo de bienvenida: el ultimo correo enviado, para quien se acaba de suscribir.
+// Lleva su propio enlace de baja y una nota corta arriba. La clave de idempotencia
+// hace que un mismo suscriptor no lo reciba dos veces aunque la peticion se repita.
+export async function enviarBienvenida(idEdicion: string, destinatario: Destinatario) {
+  const { noticia, construirPara } = await cargarCorreo(idEdicion)
+  const suyo = construirPara(destinatario.id, true)
+  if (suyo.errores.length) throw new ErrorNoticia(suyo.errores.join(' '))
+
+  const { data, error } = await resend.emails.send(
+    {
+      from: REMITENTE,
+      to: destinatario.email,
+      subject: noticia.title ?? '',
+      html: suyo.html,
+      text: suyo.texto,
+      headers: cabecerasBaja(destinatario.id),
+    },
+    { idempotencyKey: `bienvenida-${destinatario.id}` }
+  )
+  if (error || !data?.id) throw new ErrorNoticia('Resend no aceptó el correo de bienvenida: ' + (error?.message ?? 'sin respuesta'), 502)
   return { resendId: data.id }
 }
 
