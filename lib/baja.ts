@@ -2,20 +2,37 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { SITE_URL } from '@/lib/sitio'
 
-// Solo servidor. Enlaces de baja firmados con HMAC, uno por suscriptor.
-// La firma se deriva de SUPABASE_SERVICE_ROLE_KEY (ya existe en Vercel): sin ese
-// secreto nadie puede fabricar el enlace de otra persona. Si algun dia cambias esa
-// clave, los enlaces de baja de correos antiguos dejaran de valer (los nuevos si).
+// Solo servidor. Enlaces de baja firmados con HMAC, uno por suscriptor: sin el secreto
+// nadie puede fabricar el enlace de otra persona.
+// - BAJA_SECRETO: su propia clave, solo para esto. Firma los enlaces nuevos y los comprueba.
+//   Cambiar la service_role de Supabase ya no afecta a estos enlaces.
+// - BAJA_SECRETO_ANTERIOR (opcional): la clave con la que se firmaron los correos ya enviados
+//   (antes era la service_role). Solo sirve para COMPROBAR esos enlaces antiguos, que asi siguen
+//   funcionando. Si la quitas, los enlaces de los correos viejos dejan de valer (los nuevos no).
 
 // Id especial para la vista previa y el correo de prueba: nunca da de baja a nadie.
 export const ID_PRUEBA = 'prueba'
 
 const FORMATO_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-function firma(id: string) {
-  const secreto = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!secreto) throw new Error('Falta SUPABASE_SERVICE_ROLE_KEY')
+function secretoActual() {
+  const secreto = process.env.BAJA_SECRETO
+  if (!secreto) throw new Error('Falta BAJA_SECRETO (la clave de los enlaces de baja)')
+  return secreto
+}
+
+function firma(id: string, secreto = secretoActual()) {
   return createHmac('sha256', secreto).update(`vvc-baja-v1:${id.toLowerCase()}`).digest('hex').slice(0, 32)
+}
+
+// Un enlace vale si su firma coincide con la clave actual o con la anterior.
+function firmaValida(id: string, t: string) {
+  const secretos = [secretoActual(), process.env.BAJA_SECRETO_ANTERIOR].filter((x): x is string => Boolean(x))
+  const recibido = Buffer.from(t)
+  return secretos.some(secreto => {
+    const esperado = Buffer.from(firma(id, secreto))
+    return recibido.length === esperado.length && timingSafeEqual(recibido, esperado)
+  })
 }
 
 function parametros(id: string) {
@@ -51,9 +68,7 @@ export function leerEnlace(s: unknown, t: unknown): EnlaceBaja {
   if (typeof s !== 'string' || typeof t !== 'string' || !FORMATO_ID.test(s) || !/^[0-9a-f]{32}$/.test(t)) {
     return { tipo: 'invalido' }
   }
-  const esperado = Buffer.from(firma(s))
-  const recibido = Buffer.from(t)
-  if (recibido.length !== esperado.length || !timingSafeEqual(recibido, esperado)) return { tipo: 'invalido' }
+  if (!firmaValida(s, t)) return { tipo: 'invalido' }
   return { tipo: 'valido', id: s.toLowerCase() }
 }
 
