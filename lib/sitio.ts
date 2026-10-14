@@ -11,7 +11,7 @@ export type Red = 'instagram' | 'facebook' | 'x' | 'threads' | 'tiktok'
 
 export const REDES: Record<Red, string | null> = {
   instagram: 'https://www.instagram.com/viva_verdad_cuba/',
-  facebook: null,
+  facebook: 'https://www.facebook.com/share/19MF5ozRDw/',
   x: null,
   threads: null,
   tiktok: null,
