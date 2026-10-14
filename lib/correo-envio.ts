@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { construirCorreo, type CorreoConstruido } from '@/lib/correo-html'
 import { ErrorNoticia, esAntigua, idsPublicados, obtenerNoticia, type NoticiaAdmin } from '@/lib/noticias-admin'
 import { cabecerasBaja, ID_PRUEBA, urlPaginaBaja } from '@/lib/baja'
-import { REMITENTE } from '@/lib/sitio'
+import { REMITENTE, urlNoticia } from '@/lib/sitio'
 
 // Solo servidor. El correo SIEMPRE se construye desde lo guardado en la base de datos.
 
@@ -35,8 +35,10 @@ export async function cargarCorreo(id: string): Promise<CorreoCargado> {
   const bloques = noticia.blocks
   // Un correo ya enviado se muestra con su fecha de envio. Misma fecha para todos los destinatarios.
   const fecha = noticia.sent_at ? new Date(noticia.sent_at) : new Date()
+  // El boton final solo lleva a la web si la noticia esta publicada alli.
+  const enlaceNoticia = noticia.web_status === 'publicada' ? urlNoticia(String(noticia.id)) : null
   const construirPara = (idSuscriptor: string, bienvenida = false) =>
-    construirCorreo({ asunto: noticia.title ?? '', bloques, publicados, fecha, enlaceBaja: urlPaginaBaja(idSuscriptor), bienvenida })
+    construirCorreo({ asunto: noticia.title ?? '', bloques, publicados, fecha, enlaceBaja: urlPaginaBaja(idSuscriptor), enlaceNoticia, bienvenida })
 
   return { noticia, correo: construirPara(ID_PRUEBA), construirPara }
 }

@@ -296,12 +296,12 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
           {[...vista.errores, ...vista.avisos].map(t => (
             <p key={t} className={`${vista.errores.includes(t) ? avisoError : avisoAtencion} mt-3`}>{t}</p>
           ))}
-          <div className="mt-3 overflow-x-auto rounded-2xl bg-[#efebe2] shadow-[inset_0_0_0_1px_var(--linea)]">
+          <div className="mt-3 overflow-x-auto rounded-2xl bg-[#f2f2f7] shadow-[inset_0_0_0_1px_var(--linea)]">
             <iframe
               title="Vista previa del correo"
               sandbox=""
               srcDoc={vista.html}
-              className="mx-auto block h-[75vh] min-h-[480px] border-0 bg-white"
+              className="mx-auto block h-[75vh] min-h-[480px] border-0 bg-[#f2f2f7]"
               style={{ width: ancho === 'movil' ? 375 : 640, maxWidth: ancho === 'movil' ? '100%' : undefined }}
             />
           </div>
