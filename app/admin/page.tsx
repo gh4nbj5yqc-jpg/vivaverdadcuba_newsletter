@@ -6,13 +6,16 @@ import EditorNoticia from '@/components/admin/EditorNoticia'
 import Historial from '@/components/admin/Historial'
 import Suscriptores from '@/components/admin/Suscriptores'
 import ChatAdmin from '@/components/admin/ChatAdmin'
+import type { TipoNoticia } from '@/lib/secciones'
 import { avisoError, botonConfirmar, botonDiscreto, botonPrimario, botonSecundario, campo, etiqueta } from '@/components/admin/estilos'
 
-type Pestana = 'noticia' | 'suscriptores' | 'historial' | 'chat'
+type Pestana = 'noticia' | 'local' | 'suscriptores' | 'historial' | 'chat'
 
 // "Noticia" es el editor unico: lo que se escribe ahi sirve para la web y para el correo.
+// "Local Louisville" es el mismo editor para las noticias locales, que solo van a la web.
 const PESTANAS: { id: Pestana; nombre: string }[] = [
   { id: 'noticia', nombre: 'Noticia' },
+  { id: 'local', nombre: 'Local Louisville' },
   { id: 'suscriptores', nombre: 'Suscriptores' },
   { id: 'historial', nombre: 'Historial' },
   { id: 'chat', nombre: 'Chat' },
@@ -25,9 +28,12 @@ export default function AdminPage() {
   const [entrando, setEntrando] = useState(false)
 
   const [pestana, setPestana] = useState<Pestana>('noticia')
-  // Cambiar "clave" vuelve a montar el editor con otra noticia (o una nueva).
-  const [abierta, setAbierta] = useState<{ id: string | null; clave: number }>({ id: null, clave: 0 })
-  const [hayCambios, setHayCambios] = useState(false)
+  // Cambiar "clave" vuelve a montar el editor con otra noticia (o una nueva). Un editor por tipo.
+  const [abierta, setAbierta] = useState<Record<TipoNoticia, { id: string | null; clave: number }>>({
+    general: { id: null, clave: 0 },
+    local: { id: null, clave: 0 },
+  })
+  const [hayCambios, setHayCambios] = useState<Record<TipoNoticia, boolean>>({ general: false, local: false })
   const [descartar, setDescartar] = useState<null | (() => void)>(null)
 
   useEffect(() => {
@@ -39,7 +45,8 @@ export default function AdminPage() {
     return () => window.removeEventListener(EVENTO_SESION_EXPIRADA, expiro)
   }, [])
 
-  const onCambiosPendientes = useCallback((hay: boolean) => setHayCambios(hay), [])
+  const onCambiosGeneral = useCallback((hay: boolean) => setHayCambios(c => ({ ...c, general: hay })), [])
+  const onCambiosLocal = useCallback((hay: boolean) => setHayCambios(c => ({ ...c, local: hay })), [])
 
   async function verificarPassword(e: React.FormEvent) {
     e.preventDefault()
@@ -65,26 +72,26 @@ export default function AdminPage() {
     }
   }
 
-  // Si hay cambios sin guardar, pide confirmación antes de cambiar de noticia.
-  function protegerCambios(accion: () => void) {
-    if (hayCambios) setDescartar(() => accion)
+  // Si el editor de ese tipo tiene cambios sin guardar, pide confirmación antes de cambiar de noticia.
+  function protegerCambios(tipo: TipoNoticia, accion: () => void) {
+    if (hayCambios[tipo]) setDescartar(() => accion)
     else accion()
   }
 
-  function abrirNoticia(id: string | null) {
-    protegerCambios(() => {
-      setAbierta(prev => ({ id, clave: prev.clave + 1 }))
-      setHayCambios(false)
-      setPestana('noticia')
+  function abrirNoticia(id: string | null, tipo: TipoNoticia = 'general') {
+    protegerCambios(tipo, () => {
+      setAbierta(prev => ({ ...prev, [tipo]: { id, clave: prev[tipo].clave + 1 } }))
+      setHayCambios(c => ({ ...c, [tipo]: false }))
+      setPestana(tipo === 'local' ? 'local' : 'noticia')
       setDescartar(null)
     })
   }
 
   // Si se borra la noticia abierta en el editor, se cambia a una noticia nueva.
-  function noticiaEliminada(id: string) {
-    if (abierta.id !== id) return
-    setAbierta(prev => ({ id: null, clave: prev.clave + 1 }))
-    setHayCambios(false)
+  function noticiaEliminada(id: string, tipo: TipoNoticia = 'general') {
+    if (abierta[tipo].id !== id) return
+    setAbierta(prev => ({ ...prev, [tipo]: { id: null, clave: prev[tipo].clave + 1 } }))
+    setHayCambios(c => ({ ...c, [tipo]: false }))
     setDescartar(null)
   }
 
@@ -108,7 +115,8 @@ export default function AdminPage() {
     )
   }
 
-  const editando = pestana === 'noticia'
+  // Que editor se ve ahora (null en Suscriptores, Historial y Chat).
+  const editando: TipoNoticia | null = pestana === 'noticia' ? 'general' : pestana === 'local' ? 'local' : null
 
   return (
     <main className="min-h-screen bg-fondo font-sans text-tinta">
@@ -119,15 +127,15 @@ export default function AdminPage() {
         </header>
 
         {/* Pestañas: un selector de cristal que se queda arriba, con una pastilla que se desliza. */}
-        <nav aria-label="Secciones del panel" className="cristal cristal-barra sticky top-[calc(0.5rem+env(safe-area-inset-top,0px))] z-10 grid grid-cols-4 rounded-full p-1">
+        <nav aria-label="Secciones del panel" className="cristal cristal-barra sticky top-[calc(0.5rem+env(safe-area-inset-top,0px))] z-10 grid grid-cols-5 rounded-full p-1">
           <span
             aria-hidden="true"
             style={{ translate: `${PESTANAS.findIndex(p => p.id === pestana) * 100}% 0` }}
-            className="absolute top-1 bottom-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-superficie shadow-[0_1px_4px_rgba(0,0,0,0.14)] transition-[translate] duration-300 ease-[cubic-bezier(0.3,1.3,0.5,1)] motion-reduce:transition-none"
+            className="absolute top-1 bottom-1 left-1 w-[calc((100%-0.5rem)/5)] rounded-full bg-superficie shadow-[0_1px_4px_rgba(0,0,0,0.14)] transition-[translate] duration-300 ease-[cubic-bezier(0.3,1.3,0.5,1)] motion-reduce:transition-none"
           />
           {PESTANAS.map(p => (
             <button key={p.id} type="button" onClick={() => setPestana(p.id)} aria-current={pestana === p.id ? 'page' : undefined}
-              className={`relative min-h-10 rounded-full px-1 text-[0.8125rem] font-semibold transition-colors sm:text-[0.9375rem] ${pestana === p.id ? 'text-tinta' : 'text-tinta-2'}`}>
+              className={`relative min-h-10 rounded-full px-1 text-[0.75rem] font-semibold leading-tight transition-colors sm:text-[0.875rem] ${pestana === p.id ? 'text-tinta' : 'text-tinta-2'}`}>
               {p.nombre}
             </button>
           ))}
@@ -143,16 +151,22 @@ export default function AdminPage() {
 
         {editando && (
           <div className="mt-5 mb-5 flex items-center justify-between gap-3">
-            <p className="text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">{abierta.id ? 'Editando noticia' : 'Noticia nueva'}</p>
-            <button type="button" onClick={() => abrirNoticia(null)} className={`${botonSecundario} shrink-0 whitespace-nowrap`}>
+            <p className="text-[1.375rem] font-bold tracking-[-0.02em] text-acento-tinta">
+              {abierta[editando].id ? 'Editando noticia' : 'Noticia nueva'}
+              {editando === 'local' ? ' de Louisville' : ''}
+            </p>
+            <button type="button" onClick={() => abrirNoticia(null, editando)} className={`${botonSecundario} shrink-0 whitespace-nowrap`}>
               + Nueva noticia
             </button>
           </div>
         )}
 
-        {/* El editor sigue montado al pasar a Suscriptores o Historial para no perder lo escrito. */}
-        <div hidden={!editando}>
-          <EditorNoticia key={abierta.clave} idInicial={abierta.id} onCambiosPendientes={onCambiosPendientes} />
+        {/* Los editores siguen montados al cambiar de pestaña para no perder lo escrito. */}
+        <div hidden={editando !== 'general'}>
+          <EditorNoticia key={abierta.general.clave} idInicial={abierta.general.id} onCambiosPendientes={onCambiosGeneral} />
+        </div>
+        <div hidden={editando !== 'local'}>
+          <EditorNoticia key={`local-${abierta.local.clave}`} idInicial={abierta.local.id} onCambiosPendientes={onCambiosLocal} seccion="louisville" />
         </div>
 
         <div className="mt-6">

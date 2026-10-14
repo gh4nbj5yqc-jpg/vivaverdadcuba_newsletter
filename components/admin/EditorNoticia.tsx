@@ -7,9 +7,12 @@ import type { EstadoWeb, NoticiaAdmin } from '@/lib/noticias-admin'
 import EditorBloques from './EditorBloques'
 import CampoImagen from './CampoImagen'
 import RevisarYPublicar from './RevisarYPublicar'
+import RevisarLocal from './RevisarLocal'
+import type { SeccionLocal } from '@/lib/secciones'
 import { avisoAtencion, avisoError, avisoOk, ayuda, botonConfirmar, botonDiscreto, botonPrimario, botonSecundario, campo, etiqueta, titular, verde } from './estilos'
 
 // Editor unico: la noticia se escribe UNA sola vez y sirve para la web y para el correo.
+// Con "seccion" (Louisville...) edita una noticia local: el mismo editor, pero solo para la web.
 
 type Aviso = { tipo: 'ok' | 'error'; texto: string } | null
 
@@ -20,6 +23,8 @@ export type ResultadoGuardar = { ok: true; id: string } | { ok: false; error: st
 type Props = {
   idInicial: string | null
   onCambiosPendientes: (hay: boolean) => void
+  // Solo en las noticias locales. Sin seccion es una noticia general (web y correo).
+  seccion?: SeccionLocal
 }
 
 const fecha = (iso: string | null) =>
@@ -29,7 +34,9 @@ const fecha = (iso: string | null) =>
 const huella = (b: Bloque) => (b.tipo === 'imagen' ? ['imagen', b.url, b.alt, b.pie] : ['texto', b.subtitulo, b.texto])
 const mismoContenido = (a: Bloque[], b: Bloque[]) => JSON.stringify(a.map(huella)) === JSON.stringify(b.map(huella))
 
-export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props) {
+export default function EditorNoticia({ idInicial, onCambiosPendientes, seccion }: Props) {
+  // Las locales se guardan en su propia tabla, por sus propias rutas (que no tienen correo).
+  const api = seccion ? '/api/locales' : '/api/editions'
   const [id, setId] = useState<string | null>(idInicial)
   const [cargando, setCargando] = useState(Boolean(idInicial))
   const [errorCarga, setErrorCarga] = useState('')
@@ -98,7 +105,7 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
     let vigente = true
     ;(async () => {
       try {
-        const { edicion } = await pedirJson<{ edicion: NoticiaAdmin }>(`/api/editions/${encodeURIComponent(idInicial)}`)
+        const { edicion } = await pedirJson<{ edicion: NoticiaAdmin }>(`${api}/${encodeURIComponent(idInicial)}`)
         if (vigente) aplicar(edicion)
       } catch (e) {
         if (vigente && !(e instanceof SesionExpirada)) {
@@ -109,18 +116,18 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
       }
     })()
     return () => { vigente = false }
-  }, [idInicial])
+  }, [idInicial, api])
 
   // Guarda la noticia con el estado web indicado. No muestra avisos: eso lo decide quien la llama.
   async function guardar(estado: EstadoWeb): Promise<ResultadoGuardar> {
     setGuardando(true)
     try {
       const { edicion } = await pedirJson<{ edicion: NoticiaAdmin }>(
-        id ? `/api/editions/${encodeURIComponent(id)}` : '/api/editions',
+        id ? `${api}/${encodeURIComponent(id)}` : api,
         {
           method: id ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ titulo, portada, bloques, estado }),
+          body: JSON.stringify({ titulo, portada, bloques, estado, seccion }),
         }
       )
       aplicar(edicion)
@@ -172,10 +179,14 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
           Web: <strong className={publicada ? verde : 'text-tinta'}>{publicada ? 'Publicada' : 'Borrador'}</strong>
           {publicada && publicadaEl ? ` · desde el ${fecha(publicadaEl)}` : ''}
         </p>
-        <p>
-          Correo: <strong className={enviado.sent ? verde : 'text-tinta'}>{enviado.sent ? 'Enviado' : 'No enviado'}</strong>
-          {enviado.sent && enviado.sentAt ? ` · el ${fecha(enviado.sentAt)}` : ''}
-        </p>
+        {seccion ? (
+          <p>Correo: <strong className="text-tinta">Nunca (noticia local)</strong></p>
+        ) : (
+          <p>
+            Correo: <strong className={enviado.sent ? verde : 'text-tinta'}>{enviado.sent ? 'Enviado' : 'No enviado'}</strong>
+            {enviado.sent && enviado.sentAt ? ` · el ${fecha(enviado.sentAt)}` : ''}
+          </p>
+        )}
       </div>
 
       {enviado.sent && (
@@ -194,7 +205,9 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
         <label className={etiqueta} htmlFor="titular">Titular</label>
         <input id="titular" className={`${campo} ${titular} text-xl! font-bold`} value={titulo} maxLength={200}
           placeholder="El titular de la noticia" aria-describedby="titular-ayuda" onChange={e => setTitulo(e.target.value)} />
-        <p id="titular-ayuda" className={`${ayuda} mt-1.5`}>Es el titular en la web y también el asunto del correo.</p>
+        <p id="titular-ayuda" className={`${ayuda} mt-1.5`}>
+          {seccion ? 'Es el titular en la web.' : 'Es el titular en la web y también el asunto del correo.'}
+        </p>
       </div>
 
       <div className="tarjeta mb-7 p-4">
@@ -237,15 +250,19 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes }: Props)
         )}
       </div>
 
-      <RevisarYPublicar
-        id={id}
-        enviado={enviado.sent}
-        publicada={publicada}
-        ocupado={guardando}
-        titular={titulo}
-        guardar={guardar}
-        onEnviado={sentAt => setEnviado({ sent: true, sentAt })}
-      />
+      {seccion ? (
+        <RevisarLocal seccion={seccion} publicada={publicada} ocupado={guardando} guardar={guardar} />
+      ) : (
+        <RevisarYPublicar
+          id={id}
+          enviado={enviado.sent}
+          publicada={publicada}
+          ocupado={guardando}
+          titular={titulo}
+          guardar={guardar}
+          onEnviado={sentAt => setEnviado({ sent: true, sentAt })}
+        />
+      )}
     </section>
   )
 }

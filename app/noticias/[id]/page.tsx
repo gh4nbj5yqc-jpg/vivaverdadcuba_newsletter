@@ -5,6 +5,7 @@ import { connection } from 'next/server'
 import CuerpoNoticia from '@/components/noticias/CuerpoNoticia'
 import { urlImagenPermitida } from '@/lib/bloques'
 import { obtenerArticulo, formatearFecha, adelanto, portadaDe } from '@/lib/ediciones'
+import { nombreSeccion, urlSeccion } from '@/lib/secciones'
 import { NOMBRE_SITIO } from '@/lib/sitio'
 
 type Props = { params: Promise<{ id: string }> }
@@ -49,13 +50,16 @@ export default async function ArticuloPage({ params }: Props) {
   // Solo la portada elegida; si no hay, no se repite la primera imagen del texto.
   const portada = articulo.web_cover_url && urlImagenPermitida(articulo.web_cover_url) ? articulo.web_cover_url : null
 
+  // Una noticia local vuelve a su pestaña (Louisville...), no a General.
+  const volver = articulo.seccion === 'general' ? 'Volver a las noticias' : `Volver a las noticias de ${nombreSeccion(articulo.seccion)}`
+
   return (
     <main className="pt-5 pb-10">
       {/* Boton de volver, de cristal: se queda arriba mientras se lee y deja ver la noticia por debajo. */}
       <Link
-        href="/noticias"
-        aria-label="Volver a las noticias"
-        title="Volver a las noticias"
+        href={urlSeccion(articulo.seccion)}
+        aria-label={volver}
+        title={volver}
         className="cristal sticky top-3 z-30 flex h-11 w-11 items-center justify-center rounded-full transition active:scale-95"
       >
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -81,13 +85,16 @@ export default async function ArticuloPage({ params }: Props) {
         </div>
       </article>
 
-      <aside className="tarjeta mt-5 px-5 py-7 text-center sm:px-8">
-        <p className="text-2xl font-extrabold tracking-[-0.02em]">¿Te gustó esta noticia?</p>
-        <p className="mt-1.5 text-[1.0625rem] text-tinta-2">Recibe las próximas directo en tu correo.</p>
-        <Link href="/" className="boton-acento mt-5">
-          Suscribirme
-        </Link>
-      </aside>
+      {/* Invitacion a suscribirse: solo en las generales, que son las que llegan por correo. */}
+      {articulo.seccion === 'general' && (
+        <aside className="tarjeta mt-5 px-5 py-7 text-center sm:px-8">
+          <p className="text-2xl font-extrabold tracking-[-0.02em]">¿Te gustó esta noticia?</p>
+          <p className="mt-1.5 text-[1.0625rem] text-tinta-2">Recibe las próximas directo en tu correo.</p>
+          <Link href="/" className="boton-acento mt-5">
+            Suscribirme
+          </Link>
+        </aside>
+      )}
     </main>
   )
 }

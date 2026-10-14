@@ -74,7 +74,7 @@ export async function idsPublicados(ids: string[]) {
   return new Set(data.map(d => String(d.id)))
 }
 
-function str(valor: unknown, max: number, campo: string) {
+export function str(valor: unknown, max: number, campo: string) {
   if (valor === undefined || valor === null) return ''
   if (typeof valor !== 'string') throw new ErrorNoticia(`El campo ${campo} no es texto`)
   const limpio = valor.trim()

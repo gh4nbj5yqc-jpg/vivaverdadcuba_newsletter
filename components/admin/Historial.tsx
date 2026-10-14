@@ -3,12 +3,16 @@
 import { useEffect, useState } from 'react'
 import { pedirJson, SesionExpirada } from '@/lib/admin-cliente'
 import type { NoticiaAdmin } from '@/lib/noticias-admin'
+import type { TipoNoticia } from '@/lib/secciones'
 import { avisoError, avisoOk, ayuda, botonPrimario, botonPeligro, botonSecundario, verde } from './estilos'
 
 type Props = {
-  onAbrir: (id: string) => void
-  onEliminada: (id: string) => void
+  onAbrir: (id: string, tipo: TipoNoticia) => void
+  onEliminada: (id: string, tipo: TipoNoticia) => void
 }
+
+// Las generales y las de Louisville, juntas y de la mas reciente a la mas vieja.
+type Fila = NoticiaAdmin & { tipo: TipoNoticia }
 
 const fecha = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
@@ -21,28 +25,41 @@ function Estado({ texto, tono }: { texto: string; tono: 'ok' | 'neutro' | 'apaga
 const nombreDe = (n: NoticiaAdmin) => n.web_title || n.title || '(sin título)'
 
 export default function Historial({ onAbrir, onEliminada }: Props) {
-  const [noticias, setNoticias] = useState<NoticiaAdmin[] | null>(null)
+  const [noticias, setNoticias] = useState<Fila[] | null>(null)
   const [error, setError] = useState('')
+  const [errorLocales, setErrorLocales] = useState('')
   const [confirmando, setConfirmando] = useState<string | null>(null)
   const [eliminando, setEliminando] = useState<string | null>(null)
   const [aviso, setAviso] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
 
   useEffect(() => {
-    pedirJson<{ ediciones: NoticiaAdmin[] }>('/api/editions')
-      .then(d => setNoticias(d.ediciones))
+    // Si las locales fallan (por ejemplo, falta crear su tabla en Supabase), las generales se ven igual.
+    const locales = pedirJson<{ ediciones: NoticiaAdmin[] }>('/api/locales?seccion=louisville').catch(e => {
+      if (!(e instanceof SesionExpirada)) setErrorLocales(`No se pudieron cargar las noticias de Louisville: ${e.message}`)
+      return { ediciones: [] as NoticiaAdmin[] }
+    })
+    Promise.all([pedirJson<{ ediciones: NoticiaAdmin[] }>('/api/editions'), locales])
+      .then(([g, l]) => {
+        const filas: Fila[] = [
+          ...g.ediciones.map(n => ({ ...n, tipo: 'general' as const })),
+          ...l.ediciones.map(n => ({ ...n, tipo: 'local' as const })),
+        ]
+        setNoticias(filas.sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? '')))
+      })
       .catch(e => { if (!(e instanceof SesionExpirada)) setError(e.message) })
   }, [])
 
-  async function eliminar(n: NoticiaAdmin) {
+  async function eliminar(n: Fila) {
     const id = String(n.id)
     setEliminando(id)
     setAviso(null)
     try {
-      await pedirJson(`/api/editions/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      const api = n.tipo === 'local' ? '/api/locales' : '/api/editions'
+      await pedirJson(`${api}/${encodeURIComponent(id)}`, { method: 'DELETE' })
       setNoticias(prev => prev?.filter(x => String(x.id) !== id) ?? null)
       setConfirmando(null)
       setAviso({ tipo: 'ok', texto: `Se eliminó la noticia «${nombreDe(n)}».` })
-      onEliminada(id)
+      onEliminada(id, n.tipo)
     } catch (e) {
       if (!(e instanceof SesionExpirada)) {
         setAviso({ tipo: 'error', texto: e instanceof Error ? e.message : 'No se pudo eliminar la noticia.' })
@@ -63,24 +80,32 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
         </p>
       )}
 
+      {errorLocales && <p role="alert" className={`${avisoError} mb-4`}>{errorLocales}</p>}
+
       {noticias.length === 0 ? (
         <p className={`${ayuda} py-8`}>Todavía no hay noticias.</p>
       ) : (
         <ul className="space-y-3">
           {noticias.map(n => {
             const id = String(n.id)
+            const local = n.tipo === 'local'
             const antigua = n.blocks === null && n.web_blocks === null
             const publicada = !antigua && n.web_blocks !== null && n.web_status === 'publicada'
             const cuando = n.sent_at || n.web_published_at || n.updated_at || n.published_at
             return (
               <li key={id} className="tarjeta px-4 py-4 sm:px-5">
-                <p className="text-[0.9375rem] font-semibold text-tinta-2">{fecha(cuando)}</p>
+                <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] font-semibold text-tinta-2">
+                  {fecha(cuando)}
+                  {local && <Estado texto="Louisville" tono="neutro" />}
+                </p>
                 <h3 className="mt-1 text-[1.25rem] font-bold leading-snug tracking-[-0.02em]">{nombreDe(n)}</h3>
 
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.9375rem] text-tinta-2">
                   <span className="flex items-center gap-2">
                     Correo:
-                    {antigua ? (
+                    {local ? (
+                      <Estado texto="Nunca (local)" tono="apagado" />
+                    ) : antigua ? (
                       <Estado texto={n.sent ? 'Enviado (formato antiguo)' : 'Formato antiguo'} tono="apagado" />
                     ) : n.sent ? (
                       <Estado texto="Enviado" tono="ok" />
@@ -102,7 +127,7 @@ export default function Historial({ onAbrir, onEliminada }: Props) {
 
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   {!antigua && (
-                    <button type="button" onClick={() => onAbrir(id)} className={botonSecundario}>
+                    <button type="button" onClick={() => onAbrir(id, n.tipo)} className={botonSecundario}>
                       Editar
                     </button>
                   )}

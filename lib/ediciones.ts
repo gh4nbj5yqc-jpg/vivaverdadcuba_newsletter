@@ -1,47 +1,59 @@
 import { cache } from 'react'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { bloquesVisibles, parrafos, urlImagenPermitida, type Bloque, type BloqueImagen } from '@/lib/bloques'
+import type { SeccionLocal } from '@/lib/secciones'
 
 export { bloquesVisibles }
 
 // Lectura publica de articulos para /noticias. Solo se usa en el servidor:
 // trae unicamente las columnas web y solo articulos publicados (no borradores),
 // sin importar si el correo se envio. Las ediciones antiguas no tienen web_blocks.
+// Las noticias generales estan en editions; las locales (Louisville...) en noticias_locales.
 export type ArticuloPublico = {
   id: string
   web_title: string
   web_cover_url: string | null
   web_blocks: Bloque[]
   web_published_at: string
+  seccion: 'general' | SeccionLocal
 }
 
 const COLUMNAS = 'id, web_title, web_cover_url, web_blocks, web_published_at'
+const TABLA_LOCALES = 'noticias_locales'
 
-export async function listarArticulos(): Promise<ArticuloPublico[]> {
-  const { data, error } = await supabaseAdmin
-    .from('editions')
-    .select(COLUMNAS)
-    .eq('web_status', 'publicada')
-    .not('web_blocks', 'is', null)
-    .order('web_published_at', { ascending: false })
+export async function listarArticulos(seccion: 'general' | SeccionLocal = 'general'): Promise<ArticuloPublico[]> {
+  const consulta =
+    seccion === 'general'
+      ? supabaseAdmin.from('editions').select(COLUMNAS).not('web_blocks', 'is', null)
+      : supabaseAdmin.from(TABLA_LOCALES).select(COLUMNAS).eq('seccion', seccion)
+  const { data, error } = await consulta.eq('web_status', 'publicada').order('web_published_at', { ascending: false })
 
   if (error) throw new Error(error.message)
-  return data as ArticuloPublico[]
+  return (data as Omit<ArticuloPublico, 'seccion'>[]).map(a => ({ ...a, seccion }))
 }
 
 // cache() evita consultar dos veces el mismo articulo (pagina + metadata).
+// Busca primero en las generales y, si no esta, en las locales.
 export const obtenerArticulo = cache(async (id: string): Promise<ArticuloPublico | null> => {
-  const { data, error } = await supabaseAdmin
+  const general = await supabaseAdmin
     .from('editions')
     .select(COLUMNAS)
     .eq('web_status', 'publicada')
     .not('web_blocks', 'is', null)
     .eq('id', id)
     .maybeSingle()
-
   // Un id con formato invalido hace fallar la consulta: lo tratamos como "no existe".
-  if (error) return null
-  return data as ArticuloPublico | null
+  if (general.error) return null
+  if (general.data) return { ...(general.data as Omit<ArticuloPublico, 'seccion'>), seccion: 'general' }
+
+  const local = await supabaseAdmin
+    .from(TABLA_LOCALES)
+    .select(`${COLUMNAS}, seccion`)
+    .eq('web_status', 'publicada')
+    .eq('id', id)
+    .maybeSingle()
+  if (local.error || !local.data) return null
+  return local.data as ArticuloPublico
 })
 
 export function formatearFecha(iso: string) {
