@@ -187,6 +187,18 @@ body {
   }
 }
 
+/* La flecha de la ventanita de instalar en iPhone: se mueve hacia el boton de Compartir de Safari. */
+@keyframes flecha-abajo {
+  50% {
+    transform: translateY(7px);
+  }
+}
+@keyframes flecha-arriba {
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
 /* El chat flotante aparece con un movimiento corto desde su boton. */
 @keyframes chat-abrir {
   from {
