@@ -39,6 +39,16 @@ function mismaClave(a: ArrayBuffer | null, b: Uint8Array) {
   return x.length === b.length && x.every((v, i) => v === b[i])
 }
 
+function registrarServiceWorker() {
+  return navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
+}
+
+// Texto corto del error para el mensaje detallado: "NotAllowedError: ...".
+function describir(e: unknown) {
+  if (e instanceof Error) return `${e.name}: ${e.message}`
+  return String(e)
+}
+
 async function suscripcionActual() {
   const registro = await navigator.serviceWorker.getRegistration('/')
   return (await registro?.pushManager.getSubscription()) ?? null
@@ -57,11 +67,15 @@ export default function BotonNotificaciones() {
   const [estado, setEstado] = useState<Estado>('cargando')
   const [trabajando, setTrabajando] = useState(false)
   const [error, setError] = useState('')
+  // Que paso exactamente, para poder averiguar por que fallo en un telefono concreto.
+  const [detalle, setDetalle] = useState('')
   // La ventanita abierta: los pasos para instalar (iPhone) o el globo de desactivar / bloqueadas.
   const [lugar, setLugar] = useState<Lugar | null>(null)
   const [globo, setGlobo] = useState(false)
   const boton = useRef<HTMLButtonElement>(null)
   const caja = useRef<HTMLDivElement>(null)
+  // El service worker ya registrado al cargar la pagina (ver abajo, en activar()).
+  const registro = useRef<ServiceWorkerRegistration | null>(null)
 
   // Al cargar, mira si este navegador ya tiene las notificaciones activadas.
   useEffect(() => {
@@ -84,6 +98,17 @@ export default function BotonNotificaciones() {
         }
       }
       if (vigente) setEstado(nuevo)
+      // El service worker se deja listo desde ya: en el iPhone, Safari solo deja suscribirse justo
+      // al tocar el boton, y si en ese momento hubiera que instalarlo primero, ya seria tarde.
+      if (nuevo === 'desactivadas' || nuevo === 'activadas') {
+        try {
+          const r = await registrarServiceWorker()
+          await navigator.serviceWorker.ready
+          if (vigente) registro.current = r
+        } catch {
+          // Si falla aqui, activar() lo vuelve a intentar y, si sigue fallando, lo explica.
+        }
+      }
     })()
     return () => {
       vigente = false
@@ -119,29 +144,45 @@ export default function BotonNotificaciones() {
 
   async function activar() {
     setError('')
+    setDetalle('')
     setTrabajando(true)
+    // El paso en curso, para el mensaje de error detallado.
+    let paso = 'preparar el servicio de avisos'
     try {
-      // Lo primero es pedir permiso: Safari solo lo deja justo despues de tocar el boton.
-      const permiso = await Notification.requestPermission()
-      if (permiso !== 'granted') {
-        setEstado(permiso === 'denied' ? 'bloqueadas' : 'desactivadas')
-        if (permiso === 'denied') setGlobo(true)
-        return
+      const opciones = { userVisibleOnly: true, applicationServerKey: claveEnBytes(CLAVE_PUBLICA) }
+      let suscripcion: PushSubscription
+      const listo = registro.current
+      if (listo?.active) {
+        // Lo primero al tocar es suscribirse: el propio navegador pide permiso en ese momento.
+        // (Safari del iPhone no lo deja si antes se espera a otra cosa.)
+        paso = 'suscripción (permiso y servicio de avisos de Apple o Google)'
+        suscripcion = await listo.pushManager.subscribe(opciones)
+      } else {
+        paso = 'registro del service worker'
+        const r = await registrarServiceWorker()
+        await navigator.serviceWorker.ready
+        registro.current = r
+        paso = 'suscripción (permiso y servicio de avisos de Apple o Google), con el service worker recién instalado'
+        suscripcion = await r.pushManager.subscribe(opciones)
       }
-      const registro = await navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
-      await navigator.serviceWorker.ready
-      const suscripcion =
-        (await registro.pushManager.getSubscription()) ??
-        (await registro.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveEnBytes(CLAVE_PUBLICA) }))
+
+      paso = 'guardar en el servidor'
       const res = await guardarEnServidor(suscripcion)
       if (!res.ok) {
         // Si no quedo guardada, no se deja a medias: el boton vuelve a ofrecer activarlas.
+        const datos = await res.json().catch(() => ({}))
         await suscripcion.unsubscribe().catch(() => {})
-        throw new Error('servidor')
+        throw new Error(`HTTP ${res.status} ${datos.error ?? ''}`.trim())
       }
       setEstado('activadas')
-    } catch {
-      setError('No se pudieron activar las notificaciones. Inténtalo de nuevo.')
+    } catch (e) {
+      // Si la persona dijo que no al permiso, no es un error: quedan bloqueadas.
+      if ('Notification' in window && Notification.permission === 'denied') {
+        setEstado('bloqueadas')
+      } else {
+        setError('No se pudieron activar las notificaciones. Inténtalo de nuevo.')
+        setDetalle(`Falló en: ${paso}. ${describir(e)}`)
+      }
       setGlobo(true)
     } finally {
       setTrabajando(false)
@@ -224,7 +265,10 @@ export default function BotonNotificaciones() {
           className="cristal-denso absolute top-full right-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[1.5rem] bg-superficie/90 p-4 text-[0.9375rem] leading-snug font-normal tracking-normal text-tinta motion-safe:animate-[chat-abrir_160ms_ease-out]"
         >
           {error ? (
-            <p role="alert">{error}</p>
+            <div role="alert">
+              <p>{error}</p>
+              {detalle && <p className="mt-2 text-[0.8125rem] break-words text-tinta-2 select-text">{detalle}</p>}
+            </div>
           ) : estado === 'bloqueadas' ? (
             <p>
               Las notificaciones están bloqueadas en este navegador. Para recibirlas, permítelas en los ajustes del
