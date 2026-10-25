@@ -235,7 +235,7 @@ export default function BotonNotificaciones() {
         aria-haspopup={estado === 'desactivadas' ? undefined : 'dialog'}
         aria-expanded={conGlobo ? globo : undefined}
         aria-label={activadas ? 'Notificaciones activadas. Toca para desactivarlas.' : undefined}
-        className={`cristal cristal-barra inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-3.5 pl-3 text-[0.8125rem] leading-none font-semibold tracking-normal transition active:scale-95 disabled:opacity-60 ${
+        className={`cristal border-linea inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-3.5 pl-3 text-[0.8125rem] leading-none font-semibold tracking-normal transition active:scale-95 disabled:opacity-60 ${
           activadas ? 'text-acento-tinta' : 'text-tinta'
         }`}
       >

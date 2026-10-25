@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* "app:" = la web abierta como app, desde la pantalla de inicio (sin la barra del navegador). */
+@custom-variant app (@media (display-mode: standalone));
+
 /* ------------------------------------------------------------------
    Colores y tipografia de toda la web, publica y panel de admin (estilo
    Apple News + cristal). El correo (lib/correo-html.ts) copia estos colores a mano.

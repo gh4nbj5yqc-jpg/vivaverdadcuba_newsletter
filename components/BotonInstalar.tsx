@@ -78,7 +78,7 @@ export default function BotonInstalar() {
         type="button"
         onClick={instalar}
         aria-haspopup={modo === 'iphone' ? 'dialog' : undefined}
-        className="cristal cristal-barra inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-3.5 pl-3 text-[0.8125rem] leading-none font-semibold tracking-normal text-tinta transition active:scale-95"
+        className="cristal border-linea inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-3.5 pl-3 text-[0.8125rem] leading-none font-semibold tracking-normal text-tinta transition active:scale-95"
       >
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
           <g {...trazo}>

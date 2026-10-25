@@ -15,8 +15,16 @@ export default function Cabecera({ portada = false }: { portada?: boolean }) {
   const Nombre = portada ? 'h1' : 'p'
 
   return (
-    <header className={`relative font-extrabold ${letra} ${portada ? 'pt-12 sm:pt-16' : 'pt-12'}`}>
-      <div className="absolute top-2 right-0 flex items-center gap-2">
+    <header
+      className={`relative font-extrabold ${letra} ${
+        portada
+          ? 'pt-12 sm:pt-16 app:pt-[calc(env(safe-area-inset-top,0px)+3.5rem)] app:sm:pt-[calc(env(safe-area-inset-top,0px)+4rem)]'
+          : 'pt-12 app:pt-[calc(env(safe-area-inset-top,0px)+3.5rem)]'
+      }`}
+    >
+      {/* Abierta como app no hay barra del navegador: los botones bajan para no quedar pegados a la
+          barra de la hora y la bateria (zona segura del iPhone), y el nombre baja con ellos. */}
+      <div className="absolute top-2 right-0 flex items-center gap-2 app:top-[calc(env(safe-area-inset-top,0px)+1rem)]">
         <BotonNotificaciones />
         <BotonInstalar />
       </div>
