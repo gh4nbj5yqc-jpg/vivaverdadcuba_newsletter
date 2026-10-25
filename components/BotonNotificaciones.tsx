@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import VentanaInstalar, { dondeCompartir, enLaApp, esIOS, Tecla, trazo, type Lugar } from '@/components/VentanaInstalar'
+import { limpiarClave } from '@/lib/clave-vapid'
 
 // Boton pequeño de cristal, "Activar notificaciones", que va en la cabecera junto a "Instalar app".
 // - Al tocarlo pide permiso; si la persona acepta, su navegador queda guardado en Supabase
@@ -20,7 +21,8 @@ type Estado =
   | 'activadas'
   | 'bloqueadas' // la persona las bloqueo en el navegador: solo se pueden activar desde los ajustes
 
-const CLAVE_PUBLICA = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
+// Limpia: si en Vercel se pego con un salto de linea o comillas, el navegador no la podria leer.
+const CLAVE_PUBLICA = limpiarClave(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY)
 
 function puedeRecibir() {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window

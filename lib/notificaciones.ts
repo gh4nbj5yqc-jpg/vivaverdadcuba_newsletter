@@ -1,5 +1,6 @@
 import webpush from 'web-push'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { limpiarClave } from '@/lib/clave-vapid'
 import { NOMBRE_SITIO } from '@/lib/sitio'
 
 // Solo servidor: notificaciones push de la app. Quien las activa queda en la tabla
@@ -57,9 +58,10 @@ export async function borrarSuscripcion(endpoint: string) {
 }
 
 function clavesListas() {
-  const publica = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  const privada = process.env.VAPID_PRIVATE_KEY
-  const contacto = process.env.VAPID_SUBJECT
+  // Limpias de espacios, saltos de linea y comillas que se pudieran colar al pegarlas en Vercel.
+  const publica = limpiarClave(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY)
+  const privada = limpiarClave(process.env.VAPID_PRIVATE_KEY)
+  const contacto = limpiarClave(process.env.VAPID_SUBJECT)
   if (!publica || !privada || !contacto) return false
   webpush.setVapidDetails(contacto, publica, privada)
   return true
