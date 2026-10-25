@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { pedirAdmin, pedirJson, SesionExpirada } from '@/lib/admin-cliente'
 import type { EstadoWeb } from '@/lib/noticias-admin'
-import type { ResultadoGuardar } from './EditorNoticia'
+import { textoNotificacion, type ResultadoGuardar } from './EditorNoticia'
 import { avisoAtencion, avisoError, avisoOk, ayuda, botonPrimario, botonSecundario, campo, etiqueta } from './estilos'
 
 // Parte final del editor: ver como queda el correo, enviarse una prueba y publicar
@@ -104,7 +104,7 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
     setAccion('web')
     try {
       const r = await guardar('publicada')
-      if (r.ok) setAviso({ tipo: 'ok', texto: '¡Publicada en la web! Ya se puede leer en /noticias.' })
+      if (r.ok) setAviso({ tipo: 'ok', texto: '¡Publicada en la web! Ya se puede leer en /noticias.' + textoNotificacion(r.notificacion) })
       else if (r.error) setAviso({ tipo: 'error', texto: r.error })
     } finally {
       setAccion(null)
@@ -147,6 +147,8 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
     setConfirmar(null)
     setAviso(null)
     setAccion('enviar')
+    // Al publicarla en la web por primera vez salen las notificaciones: se cuenta al final.
+    let notificacion = ''
     try {
       if (ambos) {
         const r = await guardar('publicada')
@@ -154,6 +156,7 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
           if (r.error) setAviso({ tipo: 'error', texto: `No se publicó en la web ni se envió ningún correo: ${r.error}` })
           return
         }
+        notificacion = textoNotificacion(r.notificacion)
       }
       const res = await pedirAdmin(`/api/editions/${encodeURIComponent(idNoticia)}/envio`, {
         method: 'POST',
@@ -168,21 +171,24 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
           texto:
             (ambos ? '¡Publicada en la web y enviada por correo! ' : '¡Correo enviado! ') +
             `Resend aceptó ${datos.enviados} correos en ${datos.lotes} ${datos.lotes === 1 ? 'lote' : 'lotes'}.` +
-            (datos.marcada ? '' : ' Atención: no se pudo marcar la noticia como enviada en la base de datos; no la vuelvas a enviar.'),
+            (datos.marcada ? '' : ' Atención: no se pudo marcar la noticia como enviada en la base de datos; no la vuelvas a enviar.') +
+            notificacion,
         })
       } else {
         setAviso({
           tipo: 'error',
           texto:
             (ambos ? 'La noticia sí quedó publicada en la web, pero el correo falló. ' : '') +
-            (datos.error || 'El envío falló. No se marcó como enviado.'),
+            (datos.error || 'El envío falló. No se marcó como enviado.') +
+            notificacion,
         })
       }
     } catch (e) {
       error(
         e,
         (ambos ? 'La noticia sí quedó publicada en la web. ' : '') +
-          'Se perdió la conexión durante el envío. Revisa en Resend qué correos salieron antes de reintentar.'
+          'Se perdió la conexión durante el envío. Revisa en Resend qué correos salieron antes de reintentar.' +
+          notificacion
       )
     } finally {
       setAccion(null)
@@ -244,8 +250,8 @@ export default function RevisarYPublicar({ id, enviado, publicada, ocupado, titu
           : publicada
             ? 'Ya está en la web: solo falta enviarla por correo, si quieres.'
             : enviado
-              ? 'El correo ya se envió: solo falta publicarla en la web, si quieres.'
-              : 'Antes de enviar correos se te pedirá confirmación.'}
+              ? 'El correo ya se envió: solo falta publicarla en la web, si quieres. Al publicarla se manda una notificación a quienes las activaron.'
+              : 'Antes de enviar correos se te pedirá confirmación. Al publicarla en la web se manda también una notificación a quienes las activaron.'}
       </p>
 
       {confirmar && (

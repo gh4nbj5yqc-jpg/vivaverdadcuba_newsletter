@@ -96,7 +96,8 @@ export async function guardarLocal(id: string | null, seccion: SeccionLocal, cue
 
   const { data, error } = await consulta.select(COLUMNAS).single()
   if (error) throw new ErrorNoticia(error.message, 500)
-  return comoNoticia(data as FilaLocal)
+  // seAcabaDePublicar: pasa de borrador (o de no existir) a publicada en este guardado.
+  return { edicion: comoNoticia(data as FilaLocal), seAcabaDePublicar: cambios.web_status === 'publicada' && actual?.web_status !== 'publicada' }
 }
 
 const FORMATO_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

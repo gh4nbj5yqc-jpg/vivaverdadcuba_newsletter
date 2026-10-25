@@ -3,17 +3,19 @@
 import { useEffect, useRef, useState } from 'react'
 import type { EstadoWeb } from '@/lib/noticias-admin'
 import { nombreSeccion, urlSeccion, type SeccionLocal } from '@/lib/secciones'
-import type { ResultadoGuardar } from './EditorNoticia'
+import { textoNotificacion, type ResultadoGuardar } from './EditorNoticia'
 import { avisoError, avisoOk, ayuda, botonPrimario, botonSecundario } from './estilos'
 
 // Parte final del editor de una noticia local: ver como queda en la web y publicarla.
 // Las noticias locales solo van a la web: aqui no hay correo, prueba ni envio.
+// La notificacion no sale sola, como en las generales: se manda solo si se marca la casilla
+// "Enviar notificación" al publicarla (por ejemplo, para una noticia de ultima hora).
 
 type Props = {
   seccion: SeccionLocal
   publicada: boolean
   ocupado: boolean
-  guardar: (estado: EstadoWeb) => Promise<ResultadoGuardar>
+  guardar: (estado: EstadoWeb, notificar?: boolean) => Promise<ResultadoGuardar>
 }
 
 type Aviso = { tipo: 'ok' | 'error'; texto: string } | null
@@ -28,6 +30,7 @@ export default function RevisarLocal({ seccion, publicada, ocupado, guardar }: P
   const [vista, setVista] = useState<string | null>(null)
   const [ancho, setAncho] = useState<keyof typeof ANCHOS>('movil')
   const [aviso, setAviso] = useState<Aviso>(null)
+  const [notificar, setNotificar] = useState(false)
 
   const caja = useRef<HTMLDivElement>(null)
   const [disponible, setDisponible] = useState(0)
@@ -61,9 +64,12 @@ export default function RevisarLocal({ seccion, publicada, ocupado, guardar }: P
     setAviso(null)
     setAccion('web')
     try {
-      const r = await guardar('publicada')
+      const r = await guardar('publicada', notificar)
       if (r.ok) {
-        setAviso({ tipo: 'ok', texto: `¡Publicada en la web! Ya se puede leer en la pestaña ${nombreSeccion(seccion)} de /noticias.` })
+        setAviso({
+          tipo: 'ok',
+          texto: `¡Publicada en la web! Ya se puede leer en la pestaña ${nombreSeccion(seccion)} de /noticias.` + textoNotificacion(r.notificacion),
+        })
         if (vista) setVista(`/admin/vista-local/${encodeURIComponent(r.id)}?v=${Date.now()}`)
       } else if (r.error) {
         setAviso({ tipo: 'error', texto: r.error })
@@ -82,6 +88,24 @@ export default function RevisarLocal({ seccion, publicada, ocupado, guardar }: P
         {publicada ? ' Como ya está publicada, lo guardado se ve en la web al momento.' : ''}
       </p>
 
+      {!publicada && (
+        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl bg-relleno px-4 py-3">
+          <input
+            type="checkbox"
+            checked={notificar}
+            disabled={trabajando}
+            onChange={e => setNotificar(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-acento"
+          />
+          <span>
+            <span className="block font-semibold">Enviar notificación</span>
+            <span className={ayuda}>
+              Al publicarla, avisa en el teléfono a todos los que activaron las notificaciones. Úsalo para noticias
+              importantes o de última hora.
+            </span>
+          </span>
+        </label>
+      )}
       <div className="mt-4 grid gap-2 sm:flex">
         <button type="button" className={botonSecundario} disabled={trabajando} onClick={verPrevia}>
           {accion === 'vista' ? 'Preparando…' : 'Vista previa'}

@@ -84,6 +84,7 @@ export function str(valor: unknown, max: number, campo: string) {
 
 // Guarda la noticia. Se escribe una sola vez y sirve para la web y para el correo:
 // el correo lleva el titular, la portada y el mismo contenido. Si id es null, crea la noticia.
+// primeraPublicacion: es la primera vez que sale en la web (ver esPrimeraPublicacion).
 export async function guardarNoticia(id: string | null, cuerpo: Record<string, unknown>) {
   const actual = id ? await obtenerNoticia(id) : null
   if (actual && esAntigua(actual)) {
@@ -139,7 +140,13 @@ export async function guardarNoticia(id: string | null, cuerpo: Record<string, u
 
   const { data, error } = await consulta.select(COLUMNAS).single()
   if (error) throw new ErrorNoticia(error.message, 500)
-  return data as NoticiaAdmin
+  return { edicion: data as NoticiaAdmin, primeraPublicacion: esPrimeraPublicacion(actual, cambios) }
+}
+
+// La noticia sale en la web por primera vez (no al editarla despues, ni al retirarla y volver
+// a publicarla). Es cuando se avisa a quien activo las notificaciones.
+function esPrimeraPublicacion(actual: Pick<NoticiaAdmin, 'web_published_at'> | null, cambios: Record<string, unknown>) {
+  return cambios.web_status === 'publicada' && !actual?.web_published_at
 }
 
 const FORMATO_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

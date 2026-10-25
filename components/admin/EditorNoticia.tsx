@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { estructuraInicial, MAX_IMAGENES, sinCabeceraDeCorreo, type Bloque } from '@/lib/bloques'
 import { pedirJson, SesionExpirada } from '@/lib/admin-cliente'
 import type { EstadoWeb, NoticiaAdmin } from '@/lib/noticias-admin'
+import type { ResultadoNotificacion } from '@/lib/notificaciones'
 import EditorBloques from './EditorBloques'
 import CampoImagen from './CampoImagen'
 import RevisarYPublicar from './RevisarYPublicar'
@@ -18,7 +19,18 @@ type Aviso = { tipo: 'ok' | 'error'; texto: string } | null
 
 // Lo que devuelve guardar(). error = null significa que la sesion expiro
 // (el panel ya muestra la pantalla de contraseña, no hace falta otro aviso).
-export type ResultadoGuardar = { ok: true; id: string } | { ok: false; error: string | null }
+// notificacion: lo que paso con los avisos al publicarla por primera vez (null si no se avisó).
+export type ResultadoGuardar =
+  | { ok: true; id: string; notificacion: ResultadoNotificacion | null }
+  | { ok: false; error: string | null }
+
+// La frase que se añade al aviso de "¡Publicada!" para contar que paso con las notificaciones.
+export function textoNotificacion(n: ResultadoNotificacion | null) {
+  if (!n) return ''
+  if ('error' in n) return ` Atención: no se enviaron las notificaciones. ${n.error}`
+  if (n.total === 0) return ' No se envió ninguna notificación porque todavía nadie las ha activado.'
+  return ` Notificación enviada a ${n.enviadas} de ${n.total} ${n.total === 1 ? 'dispositivo' : 'dispositivos'}.`
+}
 
 type Props = {
   idInicial: string | null
@@ -119,19 +131,20 @@ export default function EditorNoticia({ idInicial, onCambiosPendientes, seccion 
   }, [idInicial, api])
 
   // Guarda la noticia con el estado web indicado. No muestra avisos: eso lo decide quien la llama.
-  async function guardar(estado: EstadoWeb): Promise<ResultadoGuardar> {
+  // notificar: solo en las locales, la casilla "Enviar notificación" (las generales avisan solas).
+  async function guardar(estado: EstadoWeb, notificar = false): Promise<ResultadoGuardar> {
     setGuardando(true)
     try {
-      const { edicion } = await pedirJson<{ edicion: NoticiaAdmin }>(
+      const { edicion, notificacion } = await pedirJson<{ edicion: NoticiaAdmin; notificacion: ResultadoNotificacion | null }>(
         id ? `${api}/${encodeURIComponent(id)}` : api,
         {
           method: id ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ titulo, portada, bloques, estado, seccion }),
+          body: JSON.stringify({ titulo, portada, bloques, estado, seccion, notificar }),
         }
       )
       aplicar(edicion)
-      return { ok: true, id: String(edicion.id) }
+      return { ok: true, id: String(edicion.id), notificacion: notificacion ?? null }
     } catch (e) {
       if (e instanceof SesionExpirada) return { ok: false, error: null }
       return { ok: false, error: e instanceof Error ? e.message : 'No se pudo guardar.' }
